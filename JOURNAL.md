@@ -168,3 +168,102 @@ accès au DOM. L'interface ne sera qu'une couche de rendu posée par dessus.
 _(à compléter)_
 
 ---
+
+## Étape 3 — L'interface
+
+**Date :** 18 septembre 2026
+**Temps passé :** ~2 h 30
+
+### Direction visuelle retenue
+
+Ewan avait laissé le champ libre. Direction choisie : **« instrument éditorial »**.
+Papier chaud `#faf9f6`, encre `#14130f`, filets d'un cheveu, un seul accent
+oxblood `#8c3a2b` réservé au focus, à l'onglet actif et à l'action principale.
+**IBM Plex Sans** pour l'interface, **IBM Plex Mono** pour toutes les valeurs —
+hexadécimaux, ratios, px et rem : des chiffres en colonne doivent s'aligner.
+Angles à 2 px, aucune ombre portée, aucun dégradé.
+
+Le raisonnement : l'outil affiche les couleurs des autres. Sa propre peau doit
+donc être quasi achromatique, sans quoi elle entre en concurrence avec ce qu'elle
+présente. Toutes les couleurs de texte de l'interface passent AAA sur le papier —
+un outil qui juge le contraste des autres n'a pas le droit d'échouer au sien.
+
+### Fait
+
+- **Catalogue de 171 Google Fonts** embarqué dans le dépôt, avec catégorie et
+  graisses réellement servies. Aucune requête à l'API Google Fonts.
+- **Disposition** : panneau de saisie à gauche en colonne collante sur grand
+  écran, résultats à droite en onglets ; saisie en haut et sections empilées sur
+  mobile. Sur un écran étroit, faire défiler est plus rapide que viser un onglet.
+- **Couleurs** : champ texte et sélecteur natif couplés, validation en direct,
+  ajout, suppression et réordonnancement de 1 à 4 couleurs.
+- **Sélecteur de police** avec recherche, chaque nom rendu dans sa propre fonte.
+- **Matrice de contrastes** avec pastilles, filtre « seulement les paires
+  valides », et une liste de corrections cliquables qui remplacent la couleur.
+- **Brand board** 1200 × 630, export PNG à 2400 × 1260.
+- **Exports** CSS, Tailwind v4 et DTCG, avec lien de partage.
+- **État vide** soigné, bouton « Exemple » qui charge NØRVA.
+- **Accessibilité** : navigation clavier complète (combobox ARIA avec
+  `aria-activedescendant`, onglets avec flèches et Home/End, radiogroup pour les
+  ratios), anneau de focus unique et contrasté, un label par champ, deux régions
+  `aria-live` — une polie pour les résultats, une immédiate pour les
+  confirmations — et `prefers-reduced-motion` respecté.
+
+135 tests toujours verts, lint et typecheck propres.
+
+### Décisions de conception
+
+- **Réordonnancement par boutons flèches, pas par glisser-déposer.** Le
+  glisser-déposer accessible demande beaucoup de code et reste fragile ; deux
+  boutons fonctionnent au clavier, à la souris et au doigt, et s'annoncent.
+- **Les corrections vivent sous la matrice, pas dans ses cellules.** Trente-six
+  cellules contenant chacune un ratio, deux pastilles et une suggestion
+  cliquable seraient illisibles. La matrice donne le coup d'œil, la liste donne
+  l'action.
+- **Le brand board applique à lui-même la règle qu'il enseigne.** Le titre
+  d'accent prend la nuance la plus proche qui passe AA si la couleur saisie
+  échoue sur le fond. Les couleurs exactes restent visibles dans la bande de
+  palette, en bas.
+- **L'annonce des résultats est différée de 900 ms.** Sans ce délai, un lecteur
+  d'écran réciterait la matrice caractère après caractère pendant la frappe.
+- **Deux régions `aria-live` et pas davantage.** Multiplier les régions vivantes
+  rend leur ordre de lecture imprévisible.
+
+### Problèmes rencontrés
+
+1. **Perte du focus dans le champ couleur — trouvé par le lint.** La clé de
+   chaque ligne contenait la couleur (`key={`${i}-${hex}`}`). Chaque frappe
+   valide changeait donc la clé, React remontait le composant, et le champ
+   perdait le focus au milieu de la saisie. Un avertissement `set-state-in-effect`
+   d'oxlint a conduit à relire ce code et à voir le vrai problème à côté. Clé par
+   position, et synchronisation du champ par un critère sémantique : on ne
+   réécrit le texte que s'il ne désigne pas déjà la couleur en place — sinon
+   taper « 1b2a41 » verrait le champ se réécrire en « #1b2a41 » sous le curseur.
+
+2. **Deux défauts d'affichage sur mobile, invisibles sur desktop.** Les onze
+   hexadécimaux d'une rampe se chevauchaient en un magma illisible dans 390 px,
+   et les pastilles de verdict se coupaient en deux lignes (« Aa » puis « AA »).
+   Corrigé par un défilement horizontal de la rampe et un `whitespace-nowrap` sur
+   la pastille. Les captures Playwright ont servi à ça : les deux problèmes
+   n'existaient pas sur grand écran.
+
+3. **`toGamut` déjà croisé à l'étape 2, et la couche JSON des outils d'édition
+   qui décode les séquences `\uXXXX`.** Trois expressions régulières se sont
+   retrouvées avec de vrais caractères de contrôle à la place de leur texte.
+   Repéré parce que `grep` annonçait « Binary file matches ».
+
+4. **Vitest 4 n'a plus de reporter `basic`**, et Playwright a fallu l'installer
+   avec son Chromium. Les captures se rejouent par `npm run captures`.
+
+5. **Le chroma des rampes issues d'une couleur foncée**, signalé à l'étape 2, est
+   maintenant visible : la rampe « encre » de NØRVA part de `#1b2a41` ancré au
+   palier 950 et passe par `#5e88c7` au palier 500 — un bleu bleuet nettement
+   plus vif que l'encre. Conséquence rattrapée sur le brand board, où le bouton
+   d'action porte désormais la couleur de marque elle-même et non son palier 600.
+   Le réglage de fond reste à trancher.
+
+### Corrections d'Ewan
+
+_(à compléter)_
+
+---
