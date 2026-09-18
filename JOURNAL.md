@@ -267,3 +267,97 @@ un outil qui juge le contraste des autres n'a pas le droit d'échouer au sien.
 _(à compléter)_
 
 ---
+
+## Étape 4 — Le partage et les exports
+
+**Date :** 18 septembre 2026
+**Temps passé :** ~1 h 30
+
+### Fait
+
+- **Bouton « Copier le lien de ma charte »** dans l'en-tête, donc accessible
+  depuis n'importe quel onglet. Le lien est reconstruit depuis la configuration
+  et non lu dans `location.hash`, qui peut avoir 200 ms de retard sur l'état à
+  cause du délai d'écriture.
+- **Brand board en deux formats** : 1200 × 630 pour les aperçus de lien et
+  1080 × 1350 pour un post LinkedIn ou Instagram. Un sélecteur change le format
+  prévisualisé ; le format non affiché est rendu hors écran, car `html-to-image`
+  a besoin d'un nœud réellement mis en page — `display: none` donnerait une image
+  vide. Les deux sortent à deux fois le format nominal, soit 2400 × 1260 et
+  2160 × 2700.
+- **Polices réellement embarquées dans le PNG** (voir ci-dessous).
+- **Téléchargement en fichier** des trois exports texte, en plus de la copie :
+  `norva-variables.css`, `norva-theme.css`, `norva-tokens.json`.
+- **Suite de bout en bout Playwright** : `npm run e2e`, 41 vérifications.
+
+### Le vrai sujet : les polices dans le PNG
+
+C'est le piège annoncé, et il méritait d'être traité en amont plutôt que
+d'espérer que la bibliothèque s'en sorte.
+
+`html-to-image` parcourt `document.styleSheets` pour retrouver les `@font-face`.
+Une feuille servie par un autre domaine — c'est le cas de Google Fonts — lève une
+`SecurityError` à la lecture de ses règles. La bibliothèque retombe alors sur un
+re-téléchargement qui échoue parfois silencieusement, et l'image sort avec la
+police de repli. Le défaut ne se voit qu'en ouvrant le fichier.
+
+La parade est dans `src/lib/export/fonts-embed.ts` : on télécharge nous-mêmes la
+feuille `css2`, on remplace chaque `url(...)` par un data-URI, et on passe le
+résultat à `html-to-image` via son option `fontEmbedCSS`, qui court-circuite
+entièrement sa propre détection. Deux détails qui comptent :
+
+- **On ne garde que les sous-ensembles latins.** Google sert une dizaine de
+  sous-ensembles par famille — cyrillique, grec, vietnamien… Tout inliner ferait
+  plusieurs mégaoctets de base64 pour une image qui n'affiche que du latin. Le
+  latin de base contient déjà le Ø de NØRVA et les accents français.
+- **Un fichier qui n'a pas pu être inliné voit son bloc retiré**, plutôt que de
+  laisser une URL distante que le canevas refuserait de peindre.
+
+Vérifié de deux façons : la suite de bout en bout contrôle qu'aucune URL
+`fonts.gstatic` ne subsiste dans la feuille embarquée, et j'ai ouvert les PNG
+produits — Cormorant Garamond et Manrope y sont, pas leur repli.
+
+### Problèmes rencontrés
+
+1. **Chaque panneau était monté deux fois.** Le test de bout en bout a échoué sur
+   une « strict mode violation » : deux boutons portaient le même sélecteur.
+   La cause était plus grave que le test : la disposition en onglets et la
+   disposition empilée coexistaient dans le DOM, l'une masquée en CSS. Chaque
+   panneau était donc calculé deux fois, et surtout **les `id` étaient en
+   double** — un `aria-controls` pointait vers deux volets, ce qui fait dire
+   n'importe quoi à un lecteur d'écran. Corrigé par un `useSyncExternalStore` sur
+   `matchMedia` : une seule disposition est montée. Les identifiants du panneau
+   Export sont passés à `useId`.
+
+2. **`NØRVA` donnait `n-rva` comme nom de fichier.** La décomposition Unicode NFD
+   sépare un caractère accentué en lettre plus diacritique, mais Ø n'est pas un O
+   accentué : c'est une lettre à part entière, que NFD laisse intacte, et que le
+   filtre suivant remplaçait par un tiret. Même problème pour Æ, ß, Ð, Ł. Corrigé
+   par une table de translittération, extraite dans `nom-fichier.ts` — sans
+   dépendance au DOM, donc couverte par six tests unitaires.
+
+3. **Le portrait 1080 × 1350 respirait trop.** Trois blocs répartis par
+   `space-between` sur 1350 px laissaient deux vides au milieu. Rééquilibré en
+   donnant aux bandes de palette la hauteur qu'elles méritent dans un 4:5.
+
+4. **La bande « Neutre » semblait amputée** : son palier 50 est `#f4f1ea`, soit
+   exactement le fond du board. Un filet inséré à 8 % délimite la bande sans
+   ajouter de bordure visible.
+
+### Ce que vérifie `npm run e2e`
+
+| Section | Vérifications |
+|---|---|
+| Partage | fragment absent à la première visite, lien copié, charte restaurée à l'identique dans un onglet neuf, 44 nuances identiques |
+| Historique | 20 modifications d'affilée n'ajoutent aucune entrée |
+| URL corrompues | 8 fragments abîmés, dont une injection et un fragment de 3 600 caractères ; aucune exception, l'outil reste utilisable et accepte encore une saisie |
+| PNG | feuille `@font-face` inlinée, aucune URL distante, deux formats aux bonnes dimensions |
+| Exports | trois fichiers téléchargés, nommés d'après la marque, contenu complet, JSON reparsable |
+
+**41 vérifications, 0 échec.** Plus 141 tests unitaires.
+
+### Corrections d'Ewan
+
+_(à compléter)_
+
+---

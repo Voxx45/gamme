@@ -1,40 +1,56 @@
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
+import { useAnnonce } from '../../hooks/annonce-context'
 import { encodeState, shareUrl, toCss, toDtcg, toTailwind } from '../../lib'
+import { baseNomFichier, telechargerTexte } from '../../lib/export/png'
 import { useCharte } from '../../state/charte-context'
-import { BoutonCopier, Section } from '../ui/Base'
+import { Bouton, BoutonCopier, Section } from '../ui/Base'
 import { classes } from '../ui/classes'
 
-type Format = { cle: string; titre: string; extension: string; note: string; contenu: string }
+type Format = {
+  cle: string
+  titre: string
+  /** Nom du fichier tel qu'il arrivera dans le dossier de téléchargement. */
+  fichier: string
+  typeMime: string
+  note: string
+  contenu: string
+}
 
 export function ExportPanel() {
   const { charte, config } = useCharte()
+  const annoncer = useAnnonce()
   const [actif, setActif] = useState('css')
+  const idOnglets = useId()
+  const base = baseNomFichier(config.name)
 
   const formats = useMemo<Format[]>(
     () => [
       {
         cle: 'css',
         titre: 'Variables CSS',
-        extension: '.css',
+        fichier: `${base}-variables.css`,
+        typeMime: 'text/css',
         note: 'Hexadécimal : l’export passe-partout, lisible par n’importe quel projet.',
         contenu: toCss(charte),
       },
       {
         cle: 'tailwind',
         titre: 'Tailwind v4',
-        extension: '.css',
+        fichier: `${base}-theme.css`,
+        typeMime: 'text/css',
         note: 'Bloc @theme en oklch(), comme la palette native de Tailwind v4. Chaque variable engendre ses classes utilitaires.',
         contenu: toTailwind(charte),
       },
       {
         cle: 'dtcg',
         titre: 'Tokens JSON',
-        extension: '.json',
+        fichier: `${base}-tokens.json`,
+        typeMime: 'application/json',
         note: 'Format W3C Design Tokens. Les tokens composites se référencent par alias plutôt que de recopier les valeurs.',
         contenu: toDtcg(charte),
       },
     ],
-    [charte],
+    [charte, base],
   )
 
   const courant = formats.find((f) => f.cle === actif) ?? formats[0]!
@@ -53,9 +69,9 @@ export function ExportPanel() {
                 key={f.cle}
                 type="button"
                 role="tab"
-                id={`onglet-export-${f.cle}`}
+                id={`${idOnglets}-onglet-${f.cle}`}
                 aria-selected={f.cle === actif}
-                aria-controls={`volet-export-${f.cle}`}
+                aria-controls={`${idOnglets}-volet-${f.cle}`}
                 tabIndex={f.cle === actif ? 0 : -1}
                 onClick={() => setActif(f.cle)}
                 onKeyDown={(e) => {
@@ -64,7 +80,7 @@ export function ExportPanel() {
                   const pas = e.key === 'ArrowRight' ? 1 : -1
                   const suivant = formats[(i + pas + formats.length) % formats.length]!
                   setActif(suivant.cle)
-                  document.getElementById(`onglet-export-${suivant.cle}`)?.focus()
+                  document.getElementById(`${idOnglets}-onglet-${suivant.cle}`)?.focus()
                 }}
                 className={classes(
                   'h-8 px-3 text-[12px] font-medium transition-colors',
@@ -85,8 +101,18 @@ export function ExportPanel() {
             libelle="Copier"
             enonce={courant.titre}
           />
+          <Bouton
+            variante="secondaire"
+            data-test={`telecharger-${courant.cle}`}
+            onClick={() => {
+              telechargerTexte(courant.contenu, courant.fichier, courant.typeMime)
+              annoncer(`${courant.fichier} téléchargé.`, 'immediate')
+            }}
+          >
+            Télécharger
+          </Bouton>
           <span className="tabulaire text-[11px] text-ink-muted">
-            {courant.contenu.split('\n').length} lignes {courant.extension}
+            {courant.contenu.split('\n').length} lignes · {courant.fichier}
           </span>
         </div>
 
@@ -94,8 +120,8 @@ export function ExportPanel() {
 
         <div
           role="tabpanel"
-          id={`volet-export-${courant.cle}`}
-          aria-labelledby={`onglet-export-${courant.cle}`}
+          id={`${idOnglets}-volet-${courant.cle}`}
+          aria-labelledby={`${idOnglets}-onglet-${courant.cle}`}
           tabIndex={0}
           className="defilement-fin max-h-[420px] overflow-auto rounded-[2px] border border-rule bg-surface"
         >

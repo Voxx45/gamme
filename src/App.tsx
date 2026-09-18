@@ -5,10 +5,12 @@ import { ExportPanel } from './components/panels/ExportPanel'
 import { PalettePanel } from './components/panels/PalettePanel'
 import { TypePanel } from './components/panels/TypePanel'
 import { Sidebar } from './components/layout/Sidebar'
-import { Bouton } from './components/ui/Base'
+import { Bouton, BoutonCopier } from './components/ui/Base'
 import { classes } from './components/ui/classes'
 import { useAnnonce } from './hooks/annonce-context'
+import { GRAND_ECRAN, useMediaQuery } from './hooks/useMediaQuery'
 import { FournisseurAnnonces } from './hooks/useAnnonce'
+import { shareUrl } from './lib'
 import { FournisseurCharte } from './state/BrandContext'
 import { useCharte } from './state/charte-context'
 
@@ -23,8 +25,14 @@ const VOLETS = [
 ] as const
 
 function Entete() {
-  const { vide, chargerExemple, reinitialiser } = useCharte()
+  const { vide, config, chargerExemple, reinitialiser } = useCharte()
   const annoncer = useAnnonce()
+
+  // L'URL courante porte deja la charte ; on la reconstruit depuis la
+  // configuration plutot que de lire `location.hash`, qui peut avoir jusqu'a
+  // 200 ms de retard sur l'etat a cause du debounce d'ecriture.
+  const lien =
+    typeof window === 'undefined' ? '' : shareUrl(config, window.location.origin + window.location.pathname)
 
   return (
     <header className="border-b border-rule bg-paper">
@@ -39,15 +47,35 @@ function Entete() {
             Gratuit · sans compte · tout se calcule dans votre navigateur
           </p>
           {!vide ? (
-            <Bouton
-              variante="discret"
-              onClick={() => {
-                reinitialiser()
-                annoncer('Charte réinitialisée.', 'immediate')
-              }}
-            >
-              Recommencer
-            </Bouton>
+            <>
+              <Bouton
+                variante="discret"
+                onClick={() => {
+                  reinitialiser()
+                  annoncer('Charte réinitialisée.', 'immediate')
+                }}
+              >
+                Recommencer
+              </Bouton>
+              <BoutonCopier
+                variante="secondaire"
+                taille="normale"
+                texte={lien}
+                identifiant="lien-entete"
+                libelle="Copier le lien de ma charte"
+                enonce="Le lien de votre charte"
+                className="max-sm:hidden"
+              />
+              <BoutonCopier
+                variante="secondaire"
+                taille="normale"
+                texte={lien}
+                identifiant="lien-entete-court"
+                libelle="Copier le lien"
+                enonce="Le lien de votre charte"
+                className="sm:hidden"
+              />
+            </>
           ) : null}
           <Bouton
             variante={vide ? 'principal' : 'secondaire'}
@@ -154,6 +182,7 @@ function Resultats() {
   const [actif, setActif] = useState<string>(VOLETS[0].cle)
   const idOnglets = useId()
   const refsOnglets = useRef<Record<string, HTMLButtonElement | null>>({})
+  const grandEcran = useMediaQuery(GRAND_ECRAN)
 
   const volet = VOLETS.find((v) => v.cle === actif) ?? VOLETS[0]
 
@@ -172,17 +201,32 @@ function Resultats() {
     refsOnglets.current[suivant.cle]?.focus()
   }
 
+  /*
+   * Onglets sur grand ecran, sections empilees sur mobile : sur un ecran
+   * etroit, faire defiler est plus rapide que viser un onglet, et l'on garde la
+   * vue d'ensemble que la charte est censee donner.
+   *
+   * Une seule des deux dispositions est montee. Les afficher toutes les deux et
+   * en masquer une en CSS etait plus simple, mais montait chaque panneau en
+   * double : deux fois le calcul, et des `id` en double qui font pointer un
+   * onglet vers le mauvais volet pour un lecteur d'ecran.
+   */
+  if (!grandEcran) {
+    return (
+      <div className="flex flex-col gap-12">
+        {VOLETS.map((v) => (
+          <div key={v.cle}>{v.rendu()}</div>
+        ))}
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col gap-6">
-      {/*
-        Onglets sur grand écran, sections empilées sur mobile : sur un écran
-        étroit, faire défiler est plus rapide que viser un onglet, et l'on garde
-        la vue d'ensemble que la charte est censée donner.
-      */}
       <div
         role="tablist"
         aria-label="Résultats"
-        className="sticky top-0 z-20 -mx-5 hidden overflow-x-auto border-b border-rule bg-paper/95 px-5 backdrop-blur-[2px] sm:-mx-8 sm:px-8 lg:flex"
+        className="sticky top-0 z-20 -mx-5 flex overflow-x-auto border-b border-rule bg-paper/95 px-5 backdrop-blur-[2px] sm:-mx-8 sm:px-8"
       >
         {VOLETS.map((v, i) => (
           <button
@@ -216,15 +260,8 @@ function Resultats() {
         id={`${idOnglets}-volet-${volet.cle}`}
         aria-labelledby={`${idOnglets}-${volet.cle}`}
         tabIndex={-1}
-        className="hidden lg:block"
       >
         {volet.rendu()}
-      </div>
-
-      <div className="flex flex-col gap-12 lg:hidden">
-        {VOLETS.map((v) => (
-          <div key={v.cle}>{v.rendu()}</div>
-        ))}
       </div>
     </div>
   )
