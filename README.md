@@ -6,7 +6,7 @@ charte complète en quelques secondes.
 Gratuit, sans compte, sans serveur : tout se calcule dans votre navigateur, et
 rien de ce que vous saisissez ne le quitte.
 
-**[→ Ouvrir l'outil](https://gamme.vercel.app)** · [À propos](https://gamme.vercel.app/a-propos)
+**[→ Ouvrir l'outil](https://gamme-murex.vercel.app)** · [À propos](https://gamme-murex.vercel.app/a-propos)
 
 ![Le brand board de l'exemple NØRVA : le nom en Cormorant Garamond, un titre de section, un bouton, une carte et les quatre échelles de couleurs.](public/og.png)
 

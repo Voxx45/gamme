@@ -7,6 +7,7 @@
 
 export const NOM_OUTIL = 'Gamme'
 export const ACCROCHE = 'Générateur de mini charte graphique'
+export const URL_PUBLIQUE = 'https://gamme-murex.vercel.app'
 export const SITE = 'https://pineauewan.com'
 export const DEPOT = 'https://github.com/Voxx45/gamme'
 export const AUTEUR = 'Ewan Pineau'
