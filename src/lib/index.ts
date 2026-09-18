@@ -11,6 +11,8 @@ export * from './charte'
 export { formaterOklch, oklchVersHex, parseColor, versOklch } from './color/parse'
 export { generateScale, swatchAt } from './color/scale'
 export { contrastRatio, evaluatePair, relativeLuminance, SEUILS } from './color/contrast'
+export { attenuer } from './color/muted'
+export { encreLisible } from './color/readable'
 export { suggestAccessible } from './color/suggest'
 export type { Suggestion, SuggestionOptions, NiveauVise, TailleTexte } from './color/suggest'
 

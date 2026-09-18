@@ -25,3 +25,6 @@ dist-ssr
 
 # Captures regenerables par `npm run captures`
 captures/
+
+# Rapports regenerables par `npm run qa` et `npm run lighthouse`
+rapports/

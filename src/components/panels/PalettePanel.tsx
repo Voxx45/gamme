@@ -1,19 +1,10 @@
 import { useCopie } from '../../hooks/annonce-context'
-import { contrastRatio, type ColorScale } from '../../lib'
+import { encreLisible, type ColorScale } from '../../lib'
 import { useCharte } from '../../state/charte-context'
 import { Section } from '../ui/Base'
 import { classes } from '../ui/classes'
 
 const NOMS_POSITION = ['Primaire', 'Secondaire', 'Accent', 'Neutre']
-
-/**
- * Le texte posé sur une pastille doit rester lisible quelle que soit la nuance.
- * On choisit donc entre encre et papier selon ce qui contraste le plus — et on
- * ne devine pas : on calcule, avec la même fonction que la matrice.
- */
-function encreLisible(fond: string): string {
-  return contrastRatio('#14130f', fond) >= contrastRatio('#faf9f6', fond) ? '#14130f' : '#faf9f6'
-}
 
 function Echelle({ nom, scale }: { nom: string; scale: ColorScale }) {
   const { copier, copie } = useCopie()
@@ -31,7 +22,17 @@ function Echelle({ nom, scale }: { nom: string; scale: ColorScale }) {
         Onze colonnes et six caracteres d'hexadecimal ne tiennent pas dans
         390 px : sous cette largeur la rampe defile au lieu de se chevaucher.
       */}
-      <div className="defilement-fin -mx-px overflow-x-auto px-px">
+      {/*
+        `tabIndex` sur une zone a defilement : sans lui, une personne au clavier
+        ne peut pas atteindre les nuances qui debordent. C'est ce que releve la
+        regle axe `scrollable-region-focusable`.
+      */}
+      <div
+        className="defilement-fin -mx-px overflow-x-auto px-px"
+        tabIndex={0}
+        role="group"
+        aria-label={`Nuances de ${nom}`}
+      >
       <ul className="grid min-w-[616px] grid-cols-11 overflow-hidden rounded-[2px] border border-rule">
         {scale.swatches.map((s) => {
           const identifiant = `${nom}-${s.step}`
@@ -43,13 +44,13 @@ function Echelle({ nom, scale }: { nom: string; scale: ColorScale }) {
                 onClick={() => void copier(s.hex, identifiant, `${nom} ${s.step}, ${s.hex},`)}
                 style={{ backgroundColor: s.hex, color: encre }}
                 className={classes(
-                  'flex h-[74px] w-full flex-col items-center justify-between py-1.5 transition-opacity hover:opacity-90',
+                  'flex h-[78px] w-full flex-col items-center justify-between py-2 transition-opacity hover:opacity-90',
                   s.isSource ? 'ring-1 ring-inset ring-ink/35' : '',
                 )}
                 title={`Copier ${s.hex}`}
               >
-                <span className="tabulaire text-[9px] opacity-70">{s.step}</span>
-                <span className="tabulaire text-[9px] font-medium">
+                <span className="tabulaire text-[10px]">{s.step}</span>
+                <span className="tabulaire text-[10px] font-medium">
                   {copie === identifiant ? 'copié' : s.hex.slice(1)}
                 </span>
               </button>

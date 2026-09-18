@@ -115,7 +115,12 @@ export function ContrastPanel() {
         </p>
       </div>
 
-      <div className="overflow-x-auto defilement-fin">
+      <div
+        className="defilement-fin overflow-x-auto"
+        tabIndex={0}
+        role="region"
+        aria-label="Matrice de contrastes, defilement horizontal"
+      >
         <table className="w-full min-w-[640px] border-collapse">
           <caption className="visuellement-masque">
             Matrice de contrastes. Chaque ligne est une couleur de texte, chaque colonne une couleur de fond.
@@ -222,10 +227,19 @@ export function ContrastPanel() {
                 <span className="flex min-w-[190px] flex-1 items-center gap-2">
                   <span
                     aria-hidden="true"
-                    style={{ backgroundColor: c.fond.hex, color: c.texte.hex }}
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[2px] border border-ink/12 text-[13px] font-semibold"
+                    title={`${c.texte.nom} sur ${c.fond.nom}`}
+                    className="flex h-7 w-7 shrink-0 overflow-hidden rounded-[2px] border border-ink/12"
                   >
-                    Aa
+                    {/*
+                      Deux aplats côte à côte plutôt qu'un « Aa » dans la vraie
+                      paire. Rendre volontairement du texte illisible dans une
+                      interface qui reproche l'illisibilité serait un contresens
+                      — et c'est une violation de contraste bien réelle, pas un
+                      faux positif de l'audit. Le ratio et le verdict, juste à
+                      côté, disent le reste.
+                    */}
+                    <span style={{ backgroundColor: c.fond.hex }} className="h-full w-1/2" />
+                    <span style={{ backgroundColor: c.texte.hex }} className="h-full w-1/2" />
                   </span>
                   <span className="text-[13px] text-ink-soft">
                     <span className="font-medium text-ink">{c.texte.nom}</span> sur {c.fond.nom}

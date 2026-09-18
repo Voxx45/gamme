@@ -131,18 +131,26 @@ export function BoardPanel() {
         L'autre format est rendu hors écran plutôt que masqué : `html-to-image`
         a besoin d'un nœud réellement mis en page pour le mesurer. `display:none`
         donnerait une image vide.
+
+        Un conteneur de taille nulle à `overflow: hidden`, et non un simple
+        décalage à gauche : un nœud de 1080 px de large posé hors du cadre
+        gonflait le `scrollWidth` de la page, ce qui se voyait à 320 px. Ici
+        l'enfant garde sa mise en page réelle mais ne participe à aucun calcul
+        de défilement.
       */}
-      <div aria-hidden="true" className="pointer-events-none fixed left-[-20000px] top-0" style={{ opacity: 0 }}>
-        {FORMATS.filter((f) => f.cle !== formatApercu.cle).map((f) => (
-          <BrandBoard
-            key={f.cle}
-            ref={(n) => {
-              refs.current[f.cle] = n
-            }}
-            charte={charte}
-            format={f.cle as Orientation}
-          />
-        ))}
+      <div aria-hidden="true" className="pointer-events-none fixed left-0 top-0 h-0 w-0 overflow-hidden">
+        <div className="absolute left-0 top-0" style={{ opacity: 0 }}>
+          {FORMATS.filter((f) => f.cle !== formatApercu.cle).map((f) => (
+            <BrandBoard
+              key={f.cle}
+              ref={(n) => {
+                refs.current[f.cle] = n
+              }}
+              charte={charte}
+              format={f.cle as Orientation}
+            />
+          ))}
+        </div>
       </div>
 
       <p className="text-[12px] text-ink-muted">

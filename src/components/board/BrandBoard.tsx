@@ -1,6 +1,6 @@
 import { forwardRef } from 'react'
 import { pileCss } from '../../hooks/useGoogleFont'
-import { contrastRatio, evaluatePair, suggestAccessible, swatchAt, type Charte, type ColorScale } from '../../lib'
+import { attenuer, contrastRatio, evaluatePair, suggestAccessible, swatchAt, type Charte, type ColorScale } from '../../lib'
 
 export type Orientation = 'paysage' | 'portrait'
 
@@ -95,6 +95,16 @@ export const BrandBoard = forwardRef<HTMLDivElement, { charte: Charte; format?: 
     const carteFond = palier(charte, 3, 100, '#f2f0ea')
     const carteTexte = encreSur(carteFond, '#faf9f6', encre)
 
+    /*
+     * Les libelles secondaires etaient rendus par `opacity`, ce qui faisait
+     * tomber leur contraste jusqu'a 3,1:1 sans qu'on le voie venir. On melange
+     * desormais vers le fond en s'arretant au dernier point qui tient AA : meme
+     * effet d'attenuation, contraste garanti. Un visuel produit par un outil
+     * d'accessibilite doit passer ses propres criteres.
+     */
+    const texteEfface = attenuer(texte, fond, 4.6)
+    const carteEffacee = attenuer(carteTexte, carteFond, 4.6)
+
     const titre = pileCss(config.heading.family)
     const courant = pileCss(config.body.family)
     const tailleTitreSection = Math.round(charte.type.base * charte.type.ratio ** (format === 'portrait' ? 4 : 3))
@@ -105,13 +115,13 @@ export const BrandBoard = forwardRef<HTMLDivElement, { charte: Charte; format?: 
           textAlign: m.corpsEnColonne ? 'left' : 'right',
           fontSize: m.meta,
           lineHeight: 1.7,
-          opacity: 0.75,
+          color: texteEfface,
           whiteSpace: 'nowrap',
         }}
       >
         <p style={{ margin: 0, fontFamily: titre, fontSize: m.metaTitre }}>{config.heading.family}</p>
         <p style={{ margin: 0 }}>{config.body.family}</p>
-        <p style={{ margin: '6px 0 0', opacity: 0.7 }}>
+        <p style={{ margin: '6px 0 0' }}>
           {charte.type.base} px · ratio {charte.type.ratio}
         </p>
       </div>
@@ -131,7 +141,15 @@ export const BrandBoard = forwardRef<HTMLDivElement, { charte: Charte; format?: 
           boxSizing: 'border-box',
         }}
       >
-        <p style={{ fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', opacity: 0.6, margin: 0 }}>
+        <p
+          style={{
+            fontSize: 11,
+            letterSpacing: '0.16em',
+            textTransform: 'uppercase',
+            color: carteEffacee,
+            margin: 0,
+          }}
+        >
           Carte
         </p>
         <p
@@ -145,7 +163,7 @@ export const BrandBoard = forwardRef<HTMLDivElement, { charte: Charte; format?: 
         >
           Une accroche courte
         </p>
-        <p style={{ fontSize: 14, lineHeight: 1.5, margin: '10px 0 0', opacity: 0.75 }}>
+        <p style={{ fontSize: 14, lineHeight: 1.5, margin: '10px 0 0', color: carteEffacee }}>
           Trois lignes suffisent à juger une hiérarchie.
         </p>
       </div>
@@ -186,7 +204,7 @@ export const BrandBoard = forwardRef<HTMLDivElement, { charte: Charte; format?: 
                 fontSize: m.surtitre,
                 letterSpacing: '0.18em',
                 textTransform: 'uppercase',
-                opacity: 0.55,
+                color: texteEfface,
                 margin: 0,
               }}
             >
@@ -238,7 +256,7 @@ export const BrandBoard = forwardRef<HTMLDivElement, { charte: Charte; format?: 
                 fontSize: charte.type.base,
                 lineHeight: 1.55,
                 margin: '14px 0 0',
-                opacity: 0.82,
+                color: texteEfface,
                 maxWidth: m.corpsEnColonne ? 760 : 440,
               }}
             >
@@ -298,7 +316,7 @@ export const BrandBoard = forwardRef<HTMLDivElement, { charte: Charte; format?: 
                       margin: '9px 0 0',
                       fontSize: 13,
                       letterSpacing: '0.04em',
-                      opacity: 0.6,
+                      color: texteEfface,
                       textTransform: 'uppercase',
                     }}
                   >
@@ -319,7 +337,7 @@ export const BrandBoard = forwardRef<HTMLDivElement, { charte: Charte; format?: 
                     margin: 0,
                     fontSize: 11,
                     letterSpacing: '0.04em',
-                    opacity: 0.6,
+                    color: texteEfface,
                     textTransform: 'uppercase',
                   }}
                 >

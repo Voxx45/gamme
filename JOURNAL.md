@@ -361,3 +361,106 @@ produits — Cormorant Garamond et Manrope y sont, pas leur repli.
 _(à compléter)_
 
 ---
+
+## Étape 5 — Le contrôle qualité
+
+**Date :** 18 septembre 2026
+**Temps passé :** ~1 h 45
+
+### Résultats
+
+| Contrôle | Résultat |
+|---|---|
+| Build de production | vert, 353 ko / 110 ko gzip |
+| Tests Vitest | **151 / 151** |
+| Lint et typecheck | propres, aucun avertissement |
+| Lighthouse mobile, état vide | **98 · 100 · 100 · 100** |
+| Lighthouse mobile, exemple NØRVA | **98 · 100 · 100 · 100** |
+| axe-core, trois états | **0 violation**, sérieuse, critique ou autre |
+| Parcours clavier | 19 vérifications, toutes vertes |
+| Cas limites | 16 vérifications, toutes vertes |
+| Bout en bout (étape 4) | 41 / 41 |
+
+Deux nouveaux scripts : `npm run qa` (axe, clavier, cas limites) et
+`npm run lighthouse`.
+
+### Vérification contre WebAIM Contrast Checker
+
+Cinq paires, ratios et verdicts. **Correspondance exacte sur les cinq.**
+
+| Paire | WebAIM | L'outil | Verdicts, des deux côtés |
+|---|---|---|---|
+| `#767676` sur `#FFFFFF` | 4.54:1 | 4.54 | courant AA, grand AAA |
+| `#1B2A41` sur `#F4F1EA` | 12.8:1 | 12.80 | AAA partout |
+| `#C9A227` sur `#FFFFFF` | 2.41:1 | 2.41 | échec partout |
+| `#8E6B00` sur `#FFFFFF` | 4.93:1 | 4.93 | courant AA, grand AAA |
+| `#C9A227` sur `#1B2A41` | 5.96:1 | 5.96 | courant AA, grand AAA |
+
+La quatrième ligne est la correction que l'outil propose lui-même pour la
+troisième : le laiton passe du palier 400 au palier 600 et franchit le seuil.
+
+### Ce qui a été corrigé
+
+1. **Les numéros de palier de la palette tombaient à 3,16:1.** Deux fautes
+   cumulées. D'abord une `opacity-70` sur du texte de 9 px, qui réduit le
+   contraste dans les mêmes proportions sans qu'on le voie venir. Ensuite, et
+   c'est la plus intéressante : je posais l'encre `#14130f` ou le papier
+   `#faf9f6` de l'interface, en croyant que choisir le plus contrasté des deux
+   garantissait AA. C'est vrai du **noir et du blanc purs** — le pire cas y donne
+   encore 4,58:1 — mais l'encre et le papier de l'outil sont légèrement chauds,
+   et ce même pire cas tombe à **4,24:1**. Extrait dans `encreLisible()`, avec un
+   test qui balaie 4 096 couleurs du cube sRGB et vérifie le minimum.
+
+2. **Le brand board avait le même défaut, en pire.** Ses libellés secondaires
+   étaient rendus par `opacity`, avec des ratios descendant à 3,13:1 — dans une
+   image produite par un outil d'accessibilité, destinée à être partagée.
+   Remplacé par `attenuer()`, qui mélange la couleur vers le fond par recherche
+   dichotomique et s'arrête au dernier point qui tient AA : même effet
+   d'atténuation, contraste garanti. Six tests.
+
+3. **L'aperçu « Aa » des paires en échec était une vraie violation.** La
+   vignette rendait les deux couleurs en texte, donc du texte volontairement
+   illisible dans une interface qui reproche l'illisibilité. Remplacé par deux
+   aplats côte à côte : la paire reste visible, le ratio et le verdict disent le
+   reste.
+
+4. **Les zones à défilement horizontal n'étaient pas atteignables au clavier**
+   (`scrollable-region-focusable`). Sans `tabIndex`, on ne pouvait pas faire
+   défiler la matrice de contrastes sans souris. Corrigé sur la matrice et sur
+   les rampes de la palette.
+
+5. **`robots.txt` manquant.** Le serveur renvoyait `index.html`, que Lighthouse
+   analysait comme un fichier robots — 25 erreurs, et le SEO plafonné à 91.
+
+### Trois fois où mon test avait tort, pas le code
+
+Ça mérite d'être noté, parce que c'est la moitié du travail d'un contrôle qualité.
+
+- **Le débordement à 320 px.** `documentElement.scrollWidth` annonçait 833 px
+  pour une fenêtre de 320. En réalité Chrome y compte le contenu des conteneurs
+  à défilement imbriqués, même correctement clipés : la matrice, large de 878 px
+  dans une zone de 280 px, suffisait à gonfler la valeur. La page ne défile pas
+  d'un pixel — `window.scrollX` reste à zéro, `body.scrollWidth` vaut 320. Le
+  test mesure désormais ce que la personne constate.
+- **Le parcours au clavier.** « Une perte de focus » sur 70 tabulations était le
+  passage normal par la barre du navigateur en fin de tour. Reformulé : ce qui
+  compte est qu'il n'y ait ni piège, ni trou noir.
+- **Le seuil d'`attenuer`.** Un test exigeait 7:1 d'une couleur qui n'y arrivait
+  pas au départ ; la fonction la renvoie alors telle quelle, comme documenté.
+
+### Ce que je laisse passer, en le sachant
+
+- **Performance 98 et non 100.** Deux causes : `unused-javascript` (~70 ko, du
+  React non utilisé au premier rendu) et `render-blocking-insight` (~450 ms, la
+  feuille Google Fonts d'IBM Plex). Les deux se règlent — découpage du bundle,
+  préchargement ou auto-hébergement des deux polices d'interface — mais aucune
+  n'est nécessaire pour tenir l'objectif, et l'auto-hébergement changerait la
+  promesse « polices servies par Google Fonts » affichée en pied de page.
+- **`llms-txt` et `ard-schema`**, deux audits récents de Lighthouse 13, sont à
+  zéro. Ils ne pèsent dans aucune des quatre catégories notées.
+
+### Corrections d'Ewan
+
+_(à compléter)_
+
+---

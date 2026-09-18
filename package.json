@@ -12,7 +12,9 @@
     "test:watch": "vitest",
     "demo": "vitest run --config vitest.demo.config.ts",
     "captures": "node scripts/captures.mjs",
-    "e2e": "node scripts/e2e.mjs"
+    "e2e": "node scripts/e2e.mjs",
+    "lighthouse": "node scripts/lighthouse.mjs",
+    "qa": "node scripts/qa.mjs"
   },
   "dependencies": {
     "culori": "^4.0.2",
@@ -27,6 +29,8 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "@vitejs/plugin-react": "^6.1.1",
+    "axe-core": "^4.13.0",
+    "lighthouse": "^13.5.0",
     "oxlint": "^1.81.0",
     "playwright": "^1.63.0",
     "tailwindcss": "^4.3.3",
