@@ -1,5 +1,5 @@
 {
-  "name": "generateur",
+  "name": "gamme",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -14,7 +14,9 @@
     "captures": "node scripts/captures.mjs",
     "e2e": "node scripts/e2e.mjs",
     "lighthouse": "node scripts/lighthouse.mjs",
-    "qa": "node scripts/qa.mjs"
+    "qa": "node scripts/qa.mjs",
+    "assets": "node scripts/assets.mjs",
+    "video": "node scripts/video.mjs"
   },
   "dependencies": {
     "culori": "^4.0.2",
@@ -37,5 +39,13 @@
     "typescript": "~6.0.2",
     "vite": "^8.3.0",
     "vitest": "^4.1.11"
-  }
+  },
+  "description": "Generateur de mini charte graphique : nuances OKLCH, contrastes WCAG, echelle typographique, brand board et exports. Sans serveur.",
+  "license": "MIT",
+  "author": "Ewan Pineau <https://pineauewan.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Voxx45/gamme.git"
+  },
+  "homepage": "https://github.com/Voxx45/gamme#readme"
 }

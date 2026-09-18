@@ -28,3 +28,6 @@ captures/
 
 # Rapports regenerables par `npm run qa` et `npm run lighthouse`
 rapports/
+
+# L URL publique est injectee au build ; en local elle vaut localhost.
+.env.production.local

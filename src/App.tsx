@@ -10,11 +10,13 @@ import { classes } from './components/ui/classes'
 import { useAnnonce } from './hooks/annonce-context'
 import { GRAND_ECRAN, useMediaQuery } from './hooks/useMediaQuery'
 import { FournisseurAnnonces } from './hooks/useAnnonce'
+import { APropos } from './components/pages/APropos'
+import { ACCROCHE, AUTEUR, DEPOT, NOM_OUTIL, SITE } from './config'
 import { shareUrl } from './lib'
+import { Lien } from './routage-lien'
+import { useChemin } from './routage'
 import { FournisseurCharte } from './state/BrandContext'
 import { useCharte } from './state/charte-context'
-
-const NOM_OUTIL = 'Gamme'
 
 const VOLETS = [
   { cle: 'palette', titre: 'Palette', rendu: () => <PalettePanel /> },
@@ -24,7 +26,7 @@ const VOLETS = [
   { cle: 'export', titre: 'Export', rendu: () => <ExportPanel /> },
 ] as const
 
-function Entete() {
+function Entete({ simplifiee = false }: { simplifiee?: boolean }) {
   const { vide, config, chargerExemple, reinitialiser } = useCharte()
   const annoncer = useAnnonce()
 
@@ -38,55 +40,66 @@ function Entete() {
     <header className="border-b border-rule bg-paper">
       <div className="mx-auto flex max-w-[1560px] flex-wrap items-center justify-between gap-x-6 gap-y-3 px-5 py-4 sm:px-8">
         <div className="flex items-baseline gap-3">
-          <h1 className="text-[16px] font-semibold tracking-[-0.01em] text-ink">{NOM_OUTIL}</h1>
-          <p className="hidden text-[13px] text-ink-muted sm:block">Générateur de mini charte graphique</p>
+          <Lien href="/" className="text-[16px] font-semibold tracking-[-0.01em] text-ink">
+            {NOM_OUTIL}
+          </Lien>
+          <p className="hidden text-[13px] text-ink-muted sm:block">{ACCROCHE}</p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <p className="hidden text-[12px] text-ink-muted lg:block">
-            Gratuit · sans compte · tout se calcule dans votre navigateur
-          </p>
-          {!vide ? (
-            <>
-              <Bouton
-                variante="discret"
-                onClick={() => {
-                  reinitialiser()
-                  annoncer('Charte réinitialisée.', 'immediate')
-                }}
-              >
-                Recommencer
-              </Bouton>
-              <BoutonCopier
-                variante="secondaire"
-                taille="normale"
-                texte={lien}
-                identifiant="lien-entete"
-                libelle="Copier le lien de ma charte"
-                enonce="Le lien de votre charte"
-                className="max-sm:hidden"
-              />
-              <BoutonCopier
-                variante="secondaire"
-                taille="normale"
-                texte={lien}
-                identifiant="lien-entete-court"
-                libelle="Copier le lien"
-                enonce="Le lien de votre charte"
-                className="sm:hidden"
-              />
-            </>
-          ) : null}
-          <Bouton
-            variante={vide ? 'principal' : 'secondaire'}
-            onClick={() => {
-              chargerExemple()
-              annoncer('Exemple NØRVA chargé.', 'immediate')
-            }}
+        {simplifiee ? (
+          <Lien
+            href="/"
+            className="inline-flex h-9 items-center rounded-[2px] border border-rule-strong px-3 text-[13px] font-medium text-ink transition-colors hover:bg-surface"
           >
-            Exemple
-          </Bouton>
-        </div>
+            Ouvrir l’outil
+          </Lien>
+        ) : (
+        <div className="flex items-center gap-2">
+            <p className="hidden text-[12px] text-ink-muted lg:block">
+              Gratuit · sans compte · tout se calcule dans votre navigateur
+            </p>
+            {!vide ? (
+              <>
+                <Bouton
+                  variante="discret"
+                  onClick={() => {
+                    reinitialiser()
+                    annoncer('Charte réinitialisée.', 'immediate')
+                  }}
+                >
+                  Recommencer
+                </Bouton>
+                <BoutonCopier
+                  variante="secondaire"
+                  taille="normale"
+                  texte={lien}
+                  identifiant="lien-entete"
+                  libelle="Copier le lien de ma charte"
+                  enonce="Le lien de votre charte"
+                  className="max-sm:hidden"
+                />
+                <BoutonCopier
+                  variante="secondaire"
+                  taille="normale"
+                  texte={lien}
+                  identifiant="lien-entete-court"
+                  libelle="Copier le lien"
+                  enonce="Le lien de votre charte"
+                  className="sm:hidden"
+                />
+              </>
+            ) : null}
+            <Bouton
+              variante={vide ? 'principal' : 'secondaire'}
+              onClick={() => {
+                chargerExemple()
+                annoncer('Exemple NØRVA chargé.', 'immediate')
+              }}
+            >
+              Exemple
+            </Bouton>
+          </div>
+    )}
       </div>
     </header>
   )
@@ -99,16 +112,22 @@ function PiedDePage() {
         <p>
           Conçu et développé par{' '}
           <a
-            href="https://pineauewan.com"
+            href={SITE}
             className="text-ink underline decoration-rule-strong underline-offset-[3px] hover:decoration-accent"
           >
-            Ewan Pineau
+            {AUTEUR}
           </a>
           , designer en recherche d’alternance.
         </p>
         <p className="flex items-center gap-4">
+          <Lien
+            href="/a-propos"
+            className="underline decoration-rule-strong underline-offset-[3px] hover:text-ink hover:decoration-accent"
+          >
+            À propos
+          </Lien>
           <a
-            href="https://github.com/ewanpineau/gamme"
+            href={DEPOT}
             className="underline decoration-rule-strong underline-offset-[3px] hover:text-ink hover:decoration-accent"
           >
             Code source
@@ -274,7 +293,7 @@ function Atelier() {
   // dire ce qu'il contient.
   useEffect(() => {
     const nom = config.name.trim()
-    document.title = nom === '' ? `${NOM_OUTIL} — générateur de mini charte graphique` : `${nom} — ${NOM_OUTIL}`
+    document.title = nom === '' ? `${NOM_OUTIL} — ${ACCROCHE.toLowerCase()}` : `${nom} — ${NOM_OUTIL}`
   }, [config.name])
 
   if (vide) {
@@ -309,6 +328,20 @@ function Atelier() {
   )
 }
 
+function Pages() {
+  const chemin = useChemin()
+  if (chemin === '/a-propos') {
+    return (
+      <>
+        <Entete simplifiee />
+        <APropos />
+        <PiedDePage />
+      </>
+    )
+  }
+  return <Atelier />
+}
+
 export default function App() {
   return (
     <FournisseurAnnonces>
@@ -320,7 +353,7 @@ export default function App() {
           Aller au contenu
         </a>
         <div className="flex min-h-screen flex-col">
-          <Atelier />
+          <Pages />
         </div>
       </FournisseurCharte>
     </FournisseurAnnonces>
