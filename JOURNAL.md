@@ -6,6 +6,36 @@ et ce qu'Ewan a corrigé. Matière première du post de lancement.
 
 ---
 
+## En dix lignes
+
+1. **Huit heures quarante-cinq** de travail effectif, réparties sur six étapes.
+2. L'IA a été rapide sur le **volume carré** : 171 polices cataloguées, 151 tests
+   unitaires, 83 vérifications de bout en bout, trois exporteurs et une suite
+   d'audit écrits sans hésitation.
+3. Elle a aussi été rapide sur ce qui se **démontre** — que l'échelle reste
+   monotone, qu'aucune nuance ne sorte du gamut, qu'une URL cassée n'écroule rien.
+4. Elle a été **plus lente et plus fausse sur le jugement** : la composition du
+   portrait 4:5, l'équilibre d'une rampe issue d'une couleur foncée, le moment où
+   un aplat vaut mieux qu'un échantillon de texte.
+5. **Ewan n'a presque rien eu à corriger** — non parce que tout était juste du
+   premier coup, mais parce qu'il a délégué : palette, attribution des polices,
+   direction visuelle et nom lui ont été proposés et il les a validés.
+6. Sa seule redirection franche : le moteur va dans **`src/lib/`**, pas dans le
+   `src/core/` proposé. Tout le reste s'est joué en autonomie.
+7. Le plus utile a été de **faire échouer les tests** : perte de focus dans un
+   champ, `id` dupliqués cassant `aria-controls`, `NØRVA` devenant `n-rva`, hex
+   illisibles à 390 px — quatre vrais défauts qu'aucune relecture n'aurait vus.
+8. **Le moment le plus difficile : l'étape 5.** Lighthouse a révélé que l'outil
+   échouait à ses propres critères de contraste, à deux endroits.
+9. La cause n'était pas une étourderie mais un **raisonnement faux tenu pour
+   acquis** : poser l'encre et le papier de l'interface, légèrement chauds, au
+   lieu du noir et du blanc purs fait tomber la garantie de 4,58:1 à **4,24:1**.
+   Un écart de 0,34 qui met un outil d'accessibilité en défaut.
+10. Trois questions restent **ouvertes, et elles sont d'Ewan** : le chroma des
+    rampes foncées, la performance à 98 plutôt que 100, et son adresse de contact.
+
+---
+
 ## Étape 0 — Initialisation et architecture
 
 **Date :** 18 septembre 2026
@@ -458,6 +488,78 @@ troisième : le laiton passe du palier 400 au palier 600 et franchit le seuil.
   promesse « polices servies par Google Fonts » affichée en pied de page.
 - **`llms-txt` et `ard-schema`**, deux audits récents de Lighthouse 13, sont à
   zéro. Ils ne pèsent dans aucune des quatre catégories notées.
+
+### Corrections d'Ewan
+
+_(à compléter)_
+
+---
+
+## Étape 6 — Le lancement
+
+**Date :** 19 septembre 2026
+**Temps passé :** ~1 h 30
+
+### Fait
+
+- **README** en français : ce que fait l'outil, les partis pris, le tableau
+  d'accessibilité, la stack, l'architecture, les commandes, la licence MIT.
+- **Page `/a-propos`** avec un routage maison de quarante lignes — une
+  bibliothèque de routage aurait pesé plus lourd que les deux pages qu'elle
+  aurait servies.
+- **Open Graph et Twitter** complets, `manifest.webmanifest`, icônes 180, 192,
+  512 et une variante *maskable* avec 10 % de marge de sécurité.
+- **Licence MIT**, métadonnées du paquet.
+- **Dépôt public** : <https://github.com/Voxx45/gamme>
+- **En production** : <https://gamme-murex.vercel.app>
+- **Vidéo de démonstration** de 30 s en 1080 × 1350.
+
+### L'image de partage n'est pas une capture d'écran
+
+`scripts/assets.mjs` ouvre l'outil sur l'exemple NØRVA, déclenche l'export PNG
+du brand board, et redimensionne le résultat de 2400 × 1260 à 1200 × 630 dans un
+canevas. L'image que les gens verront dans leur fil est donc **exactement ce que
+l'outil fabrique**, polices inlinées comprises. C'est la seule promesse honnête à
+faire pour un outil dont le brand board est l'argument principal.
+
+Les icônes sont produites de la même façon, depuis le favicon SVG.
+
+### Problèmes rencontrés
+
+1. **`vercel.json` invalide.** L'expression régulière du repli SPA contenait
+   `\.`, que la couche d'écriture a décodé en `\.` — un échappement interdit en
+   JSON. Vercel a répondu « Couldn't parse JSON file » sans indiquer la ligne.
+   Simplifié en attrape-tout `/(.*)`, qui suffit : Vercel sert les fichiers
+   statiques **avant** d'appliquer les réécritures, donc `og.png`, le manifest et
+   les assets ne sont jamais éclipsés.
+
+2. **`vercel deploy --prod --yes --name gamme` reste bloqué.** Le drapeau
+   `--name` est déprécié et provoque une invite que `--yes` ne couvre pas. Le
+   déploiement a fini par aboutir en arrière-plan, mais la commande correcte est
+   `vercel deploy --prod --yes`, sans `--name` : le projet prend le nom du
+   dossier. Le domaine `gamme.vercel.app` étant pris, Vercel a attribué
+   `gamme-murex.vercel.app`.
+
+3. **L'aperçu Open Graph pointait sur `localhost`.** Les balises sont remplies au
+   build depuis `VITE_URL_PUBLIQUE`, dont la valeur de développement est
+   `http://localhost:4200`. Il a fallu déployer une première fois pour connaître
+   le domaine, écrire `.env.production`, puis redéployer. Deux déploiements, mais
+   des métadonnées justes — et vérifiées par `curl` sur la production.
+
+4. **La vidéo durait 36,4 s au lieu de 30.** Les clics, survols et défilements
+   ajoutent environ 6,4 s que le script ne contrôle pas. Les pauses explicites ont
+   été recalées pour sommer à 23,6 s. Mesure à l'appui, pas au juge : 29,9 s.
+
+5. **ffmpeg n'est pas installé** sur la machine. Le script le détecte, s'arrête
+   proprement et affiche la commande de conversion à lancer plus tard. Le WebM
+   produit est accepté tel quel par LinkedIn.
+
+### Vérifié sur la production, pas seulement en local
+
+Les deux suites ont été rejouées contre `https://gamme-murex.vercel.app` :
+**41 vérifications de bout en bout et 42 de contrôle qualité, zéro échec.**
+Les balises Open Graph, le manifest, `robots.txt` et `/a-propos` répondent tous
+en 200 avec le bon type de contenu.
 
 ### Corrections d'Ewan
 
