@@ -7,6 +7,13 @@ import { classes } from '../ui/classes'
 
 const NOMS_POSITION = ['Primaire', 'Secondaire', 'Accent', 'Neutre']
 
+/** Le nom donné par l'utilisateur, sinon le nom de position. */
+function nomCouleur(config: { colorNames: string[] }, i: number, repli: string): string {
+  const saisi = (config.colorNames[i] ?? '').trim()
+  if (saisi !== '') return saisi
+  return NOMS_POSITION[i] ?? repli
+}
+
 type Jeton = {
   nom: string
   hex: string
@@ -30,7 +37,7 @@ export function ContrastPanel() {
   const jetons = useMemo<Jeton[]>(
     () => [
       ...charte.colors.map((c, i) => ({
-        nom: NOMS_POSITION[i] ?? c.slug,
+        nom: nomCouleur(charte.config, i, c.slug),
         hex: c.scale.source.hex,
         index: i,
         scale: c.scale,

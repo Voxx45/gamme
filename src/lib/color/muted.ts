@@ -1,4 +1,4 @@
-import { converter, formatHex, interpolate } from 'culori'
+import { converter, formatHex, interpolate } from './culori'
 import { contrastRatio } from './contrast'
 
 const toRgb = converter('rgb')

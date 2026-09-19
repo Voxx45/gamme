@@ -1,4 +1,4 @@
-import { converter, formatHex, parse as culoriParse, toGamut } from 'culori'
+import { converter, formatHex, parse as culoriParse, toGamut } from './culori'
 import type { OklchColor, ParsedColor, Result } from '../types'
 
 const toOklch = converter('oklch')

@@ -10,7 +10,16 @@ const charte = buildCharte(CONFIG_NORVA)
 describe('buildCharte', () => {
   it('produit une échelle par couleur', () => {
     expect(charte.colors).toHaveLength(4)
-    expect(charte.colors.map((c) => c.slug)).toEqual(['primary', 'secondary', 'accent', 'neutral'])
+  })
+
+  it('emploie les noms donnés aux couleurs', () => {
+    // NØRVA nomme ses couleurs : les tokens doivent s'appeler comme elles.
+    expect(charte.colors.map((c) => c.slug)).toEqual(['encre', 'laiton', 'givre', 'os'])
+  })
+
+  it('retombe sur les noms de position quand aucun nom n est donné', () => {
+    const anonyme = buildCharte({ ...CONFIG_NORVA, colorNames: ['', '', '', ''] })
+    expect(anonyme.colors.map((c) => c.slug)).toEqual(['primary', 'secondary', 'accent', 'neutral'])
   })
 
   it('donne à chaque échelle ses onze paliers', () => {
@@ -66,7 +75,7 @@ describe('toCss', () => {
   })
 
   it('emploie l hexadécimal, format passe-partout', () => {
-    expect(css).toMatch(/--color-primary-500: #[0-9a-f]{6};/)
+    expect(css).toMatch(/--color-encre-500: #[0-9a-f]{6};/)
   })
 
   it('déclare les polices avec leur pile de repli', () => {
@@ -94,7 +103,7 @@ describe('toTailwind', () => {
   })
 
   it('emploie oklch(), comme la palette native de Tailwind v4', () => {
-    expect(tw).toMatch(/--color-primary-500: oklch\([\d.]+% [\d.]+ [\d.]+\);/)
+    expect(tw).toMatch(/--color-encre-500: oklch\([\d.]+% [\d.]+ [\d.]+\);/)
   })
 
   it('rappelle l hexadécimal en commentaire, pour rester lisible', () => {

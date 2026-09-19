@@ -2,12 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import { useAnnonce } from '../../hooks/annonce-context'
 import { baseNomFichier, DEFINITION, exporterPng, FORMATS } from '../../lib/export/png'
 import { useCharte } from '../../state/charte-context'
+import { usePreferences } from '../../state/preferences'
 import { BrandBoard, type Orientation } from '../board/BrandBoard'
 import { Bouton, Section } from '../ui/Base'
 import { classes } from '../ui/classes'
 
 export function BoardPanel() {
   const { charte, config } = useCharte()
+  const { deficience } = usePreferences()
   const annoncer = useAnnonce()
 
   const refs = useRef<Record<string, HTMLDivElement | null>>({})
@@ -116,13 +118,12 @@ export function BoardPanel() {
               height: formatApercu.hauteur,
             }}
           >
-            <BrandBoard
-              ref={(n) => {
-                refs.current[formatApercu.cle] = n
-              }}
-              charte={charte}
-              format={formatApercu.cle as Orientation}
-            />
+            {/*
+              L'aperçu porte la simulation, l'export non : les nœuds capturés
+              sont ceux d'en dessous, rendus en vision courante. L'image
+              téléchargée est la charte, pas une vue de la charte.
+            */}
+            <BrandBoard charte={charte} format={formatApercu.cle as Orientation} deficience={deficience} />
           </div>
         </div>
       </div>
@@ -140,7 +141,7 @@ export function BoardPanel() {
       */}
       <div aria-hidden="true" className="pointer-events-none fixed left-0 top-0 h-0 w-0 overflow-hidden">
         <div className="absolute left-0 top-0" style={{ opacity: 0 }}>
-          {FORMATS.filter((f) => f.cle !== formatApercu.cle).map((f) => (
+          {FORMATS.map((f) => (
             <BrandBoard
               key={f.cle}
               ref={(n) => {

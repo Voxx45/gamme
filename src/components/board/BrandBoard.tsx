@@ -1,6 +1,16 @@
 import { forwardRef } from 'react'
 import { pileCss } from '../../hooks/useGoogleFont'
-import { attenuer, contrastRatio, evaluatePair, suggestAccessible, swatchAt, type Charte, type ColorScale } from '../../lib'
+import {
+  attenuer,
+  contrastRatio,
+  evaluatePair,
+  simuler,
+  suggestAccessible,
+  swatchAt,
+  type Charte,
+  type ColorScale,
+  type Deficience,
+} from '../../lib'
 
 export type Orientation = 'paysage' | 'portrait'
 
@@ -73,9 +83,18 @@ const MESURES = {
  * l'affichage ; l'export capture le nœud non réduit, si bien que ce que l'on
  * voit est exactement ce que l'on télécharge.
  */
-export const BrandBoard = forwardRef<HTMLDivElement, { charte: Charte; format?: Orientation }>(
-  function BrandBoard({ charte, format = 'paysage' }, ref) {
+export const BrandBoard = forwardRef<
+  HTMLDivElement,
+  { charte: Charte; format?: Orientation; deficience?: Deficience }
+>(function BrandBoard({ charte, format = 'paysage', deficience = 'normale' }, ref) {
     const m = MESURES[format]
+    /*
+     * La simulation s'applique au dernier moment, à l'affichage seulement.
+     * Tous les calculs — contrastes, nuances lisibles, atténuations — se font
+     * sur les vraies couleurs : simuler en amont fausserait les verdicts, et
+     * l'image exportée doit rester la charte réelle, pas une vue de celle-ci.
+     */
+    const vu = (hex: string) => simuler(hex, deficience)
     const { config } = charte
     const nom = config.name.trim() === '' ? 'Sans titre' : config.name
 
@@ -115,7 +134,7 @@ export const BrandBoard = forwardRef<HTMLDivElement, { charte: Charte; format?: 
           textAlign: m.corpsEnColonne ? 'left' : 'right',
           fontSize: m.meta,
           lineHeight: 1.7,
-          color: texteEfface,
+          color: vu(texteEfface),
           whiteSpace: 'nowrap',
         }}
       >
@@ -131,8 +150,8 @@ export const BrandBoard = forwardRef<HTMLDivElement, { charte: Charte; format?: 
       <div
         style={{
           width: m.corpsEnColonne ? '100%' : m.carte,
-          backgroundColor: carteFond,
-          color: carteTexte,
+          backgroundColor: vu(carteFond),
+          color: vu(carteTexte),
           borderRadius: 4,
           padding: m.corpsEnColonne ? '40px 42px' : '26px 28px',
           display: 'flex',
@@ -146,7 +165,7 @@ export const BrandBoard = forwardRef<HTMLDivElement, { charte: Charte; format?: 
             fontSize: 11,
             letterSpacing: '0.16em',
             textTransform: 'uppercase',
-            color: carteEffacee,
+            color: vu(carteEffacee),
             margin: 0,
           }}
         >
@@ -163,7 +182,7 @@ export const BrandBoard = forwardRef<HTMLDivElement, { charte: Charte; format?: 
         >
           Une accroche courte
         </p>
-        <p style={{ fontSize: 14, lineHeight: 1.5, margin: '10px 0 0', color: carteEffacee }}>
+        <p style={{ fontSize: 14, lineHeight: 1.5, margin: '10px 0 0', color: vu(carteEffacee) }}>
           Trois lignes suffisent à juger une hiérarchie.
         </p>
       </div>
@@ -176,8 +195,8 @@ export const BrandBoard = forwardRef<HTMLDivElement, { charte: Charte; format?: 
         style={{
           width: m.largeur,
           height: m.hauteur,
-          backgroundColor: fond,
-          color: texte,
+          backgroundColor: vu(fond),
+          color: vu(texte),
           fontFamily: courant,
           display: 'flex',
           flexDirection: 'column',
@@ -204,7 +223,7 @@ export const BrandBoard = forwardRef<HTMLDivElement, { charte: Charte; format?: 
                 fontSize: m.surtitre,
                 letterSpacing: '0.18em',
                 textTransform: 'uppercase',
-                color: texteEfface,
+                color: vu(texteEfface),
                 margin: 0,
               }}
             >
@@ -246,7 +265,7 @@ export const BrandBoard = forwardRef<HTMLDivElement, { charte: Charte; format?: 
                 fontSize: tailleTitreSection,
                 lineHeight: 1.18,
                 margin: 0,
-                color: teinteAccent,
+                color: vu(teinteAccent),
               }}
             >
               Un titre de section
@@ -256,7 +275,7 @@ export const BrandBoard = forwardRef<HTMLDivElement, { charte: Charte; format?: 
                 fontSize: charte.type.base,
                 lineHeight: 1.55,
                 margin: '14px 0 0',
-                color: texteEfface,
+                color: vu(texteEfface),
                 maxWidth: m.corpsEnColonne ? 760 : 440,
               }}
             >
@@ -268,8 +287,8 @@ export const BrandBoard = forwardRef<HTMLDivElement, { charte: Charte; format?: 
                 marginTop: 24,
                 display: 'inline-flex',
                 alignItems: 'center',
-                backgroundColor: boutonFond,
-                color: boutonTexte,
+                backgroundColor: vu(boutonFond),
+                color: vu(boutonTexte),
                 fontSize: 15,
                 fontWeight: 600,
                 padding: '13px 26px',
@@ -307,7 +326,7 @@ export const BrandBoard = forwardRef<HTMLDivElement, { charte: Charte; format?: 
                   }}
                 >
                   {c.scale.swatches.map((s) => (
-                    <div key={s.step} style={{ flex: '1 1 0', height: m.bande, backgroundColor: s.hex }} />
+                    <div key={s.step} style={{ flex: '1 1 0', height: m.bande, backgroundColor: vu(s.hex) }} />
                   ))}
                 </div>
                 {m.corpsEnColonne ? (
@@ -316,7 +335,7 @@ export const BrandBoard = forwardRef<HTMLDivElement, { charte: Charte; format?: 
                       margin: '9px 0 0',
                       fontSize: 13,
                       letterSpacing: '0.04em',
-                      color: texteEfface,
+                      color: vu(texteEfface),
                       textTransform: 'uppercase',
                     }}
                   >
@@ -337,7 +356,7 @@ export const BrandBoard = forwardRef<HTMLDivElement, { charte: Charte; format?: 
                     margin: 0,
                     fontSize: 11,
                     letterSpacing: '0.04em',
-                    color: texteEfface,
+                    color: vu(texteEfface),
                     textTransform: 'uppercase',
                   }}
                 >
@@ -349,5 +368,4 @@ export const BrandBoard = forwardRef<HTMLDivElement, { charte: Charte; format?: 
         </div>
       </div>
     )
-  },
-)
+})

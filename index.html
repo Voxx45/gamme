@@ -46,6 +46,15 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="theme-color" content="#faf9f6" />
 
+    <!--
+      Les polices de l'interface reviennent de Google, apres mesure.
+
+      Les auto-heberger devait supprimer 450 ms de blocage ; en pratique les
+      165 ko de fichiers se sont mis a concurrencer le paquet JavaScript sur la
+      meme connexion, et le premier affichage est passe de 1,8 s a 2,7 s. Servis
+      depuis un autre domaine, ils empruntent une connexion distincte et se
+      chargent en parallele. Le detail est dans JOURNAL.md, etape 7.
+    -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

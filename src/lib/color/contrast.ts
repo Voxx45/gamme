@@ -1,4 +1,4 @@
-import { converter } from 'culori'
+import { converter } from './culori'
 import type { LevelResult, PairEvaluation, Verdict } from '../types'
 
 const toRgb = converter('rgb')

@@ -40,7 +40,32 @@ describe('encodeState / decodeState — aller-retour', () => {
   })
 
   it('omet le nom quand il est vide', () => {
-    expect(encodeState({ ...CONFIG_NORVA, name: '' })).not.toContain('n=')
+    // Recherche par clé et non par sous-chaîne : « cn= » contient « n= ».
+    const p = new URLSearchParams(encodeState({ ...CONFIG_NORVA, name: '' }))
+    expect(p.has('n')).toBe(false)
+    expect(p.get('cn')).toBe('encre,laiton,givre,os')
+  })
+
+  it('omet les noms de couleurs quand aucun n est donné', () => {
+    const p = new URLSearchParams(encodeState({ ...CONFIG_NORVA, colorNames: ['', '', '', ''] }))
+    expect(p.has('cn')).toBe(false)
+  })
+
+  it('conserve les noms de couleurs par aller-retour', () => {
+    const { config } = decodeState(encodeState(CONFIG_NORVA))
+    expect(config.colorNames).toEqual(['encre', 'laiton', 'givre', 'os'])
+  })
+
+  it('refuse un nom de couleur qui ne tiendrait pas dans un identifiant CSS', () => {
+    const r = decodeState('#c=1b2a41&cn=' + encodeURIComponent('<script>'))
+    expect(r.config.colorNames[0]).toBe('')
+    expect(r.issues.length).toBeGreaterThan(0)
+  })
+
+  it('suit la couleur quand on réordonne', () => {
+    // Le nom appartient à la couleur, pas à la position.
+    const r = decodeState('#c=111111,222222&cn=alpha,beta')
+    expect(r.config.colorNames).toEqual(['alpha', 'beta'])
   })
 })
 

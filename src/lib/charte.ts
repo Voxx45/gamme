@@ -57,7 +57,8 @@ export function buildCharte(config: BrandConfig, noms?: readonly string[]): Char
       return
     }
 
-    const propose = slugify(noms?.[i] ?? NOMS_PAR_DEFAUT[i] ?? `color-${i + 1}`)
+    const saisi = (config.colorNames[i] ?? '').trim()
+    const propose = slugify(noms?.[i] ?? (saisi !== '' ? saisi : (NOMS_PAR_DEFAUT[i] ?? `color-${i + 1}`)))
     // Deux couleurs peuvent porter le même nom : on désambiguïse plutôt que
     // de produire un export où un token en écrase silencieusement un autre.
     let slug = propose

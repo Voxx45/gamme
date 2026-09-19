@@ -1,4 +1,3 @@
-import { toPng } from 'html-to-image'
 import { cssPolicesEmbarquees } from './fonts-embed'
 
 export { baseNomFichier } from './nom-fichier'
@@ -19,6 +18,10 @@ export { baseNomFichier } from './nom-fichier'
  * Pas de `cacheBust` : il ajoute un paramètre de requête aux URL de ressources,
  * ce qui casse les réponses mises en cache de Google Fonts sans rien apporter
  * ici, puisque les polices sont déjà inlinées.
+ *
+ * `html-to-image` est chargé à la demande, au premier export : la bibliothèque
+ * ne sert que dans l'onglet Brand board, il n'y a aucune raison de la faire
+ * télécharger à tout le monde au premier affichage.
  */
 
 export type FormatBoard = {
@@ -54,7 +57,10 @@ export async function genererPng(
   noeud: HTMLElement,
   options: { largeur: number; hauteur: number; polices: { family: string; weights: number[] }[] },
 ): Promise<string> {
-  const fontEmbedCSS = await cssPolicesEmbarquees(options.polices)
+  const [{ toPng }, fontEmbedCSS] = await Promise.all([
+    import('html-to-image'),
+    cssPolicesEmbarquees(options.polices),
+  ])
 
   if (document.fonts?.ready) {
     await document.fonts.ready

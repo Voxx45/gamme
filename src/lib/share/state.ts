@@ -8,6 +8,7 @@ export const VERSION_URL = '1'
 export const CONFIG_DEFAUT: BrandConfig = {
   name: '',
   colors: ['#2563eb', '#f97316', '#10b981', '#1e293b'],
+  colorNames: ['', '', '', ''],
   heading: { family: 'Inter', weight: 700, category: 'sans-serif' },
   body: { family: 'Inter', weight: 400, category: 'sans-serif' },
   baseSize: 16,
@@ -30,6 +31,7 @@ export const CONFIG_DEFAUT: BrandConfig = {
 export const CONFIG_NORVA: BrandConfig = {
   name: 'NØRVA',
   colors: ['#1b2a41', '#c9a227', '#7c9eb2', '#f4f1ea'],
+  colorNames: ['encre', 'laiton', 'givre', 'os'],
   heading: { family: 'Cormorant Garamond', weight: 600, category: 'serif' },
   body: { family: 'Manrope', weight: 400, category: 'sans-serif' },
   baseSize: 16,
@@ -68,6 +70,8 @@ const CARACTERES_DE_CONTROLE = /[\u0000-\u001f\u007f-\u009f]/g
 
 const MAX_COULEURS = 4
 const MAX_NOM = 32
+/** Un nom de couleur sert de segment dans un identifiant CSS : on reste sobre. */
+const NOM_COULEUR = /^[A-Za-z0-9 -]{0,20}$/
 
 function normaliserHex(brut: string): string | null {
   const s = brut.trim().replace(/^#/, '')
@@ -111,6 +115,11 @@ export function encodeState(config: BrandConfig): string {
   p.set('bw', String(config.body.weight))
   p.set('s', String(config.baseSize))
   p.set('r', String(config.ratio))
+
+  const noms = couleurs.map((_, i) => (config.colorNames[i] ?? '').trim())
+  // On n'écrit la clé que si au moins un nom existe : une charte sans noms
+  // garde une URL aussi courte qu'avant.
+  if (noms.some((n) => n !== '')) p.set('cn', noms.join(','))
 
   const nom = config.name.trim()
   if (nom !== '') p.set('n', nom)
@@ -205,7 +214,10 @@ export function decodeState(entree: unknown, options: DecodeOptions = {}): Decod
   const issues: string[] = []
 
   if (typeof entree !== 'string' || entree.trim() === '') {
-    return { config: { ...CONFIG_DEFAUT, colors: [...CONFIG_DEFAUT.colors] }, issues }
+    return {
+      config: { ...CONFIG_DEFAUT, colors: [...CONFIG_DEFAUT.colors], colorNames: [...CONFIG_DEFAUT.colorNames] },
+      issues,
+    }
   }
 
   let p: URLSearchParams
@@ -213,7 +225,10 @@ export function decodeState(entree: unknown, options: DecodeOptions = {}): Decod
     p = new URLSearchParams(extraireParams(entree))
   } catch {
     issues.push('Paramètres illisibles, configuration par défaut appliquée.')
-    return { config: { ...CONFIG_DEFAUT, colors: [...CONFIG_DEFAUT.colors] }, issues }
+    return {
+      config: { ...CONFIG_DEFAUT, colors: [...CONFIG_DEFAUT.colors], colorNames: [...CONFIG_DEFAUT.colorNames] },
+      issues,
+    }
   }
 
   const version = p.get('v')
@@ -243,6 +258,19 @@ export function decodeState(entree: unknown, options: DecodeOptions = {}): Decod
     colors = [...CONFIG_DEFAUT.colors]
   }
 
+  // Noms des couleurs
+  const brutNoms = p.get('cn')
+  const colorNames = colors.map((_, i) => {
+    const brut = (brutNoms ?? '').split(',')[i] ?? ''
+    const propre = brut.replace(CARACTERES_DE_CONTROLE, '').trim()
+    if (propre === '') return ''
+    if (!NOM_COULEUR.test(propre)) {
+      issues.push(`Nom de couleur refusé (${propre}).`)
+      return ''
+    }
+    return propre
+  })
+
   // Nom de marque
   let name = ''
   const brutNom = p.get('n')
@@ -260,6 +288,7 @@ export function decodeState(entree: unknown, options: DecodeOptions = {}): Decod
     config: {
       name,
       colors,
+      colorNames,
       heading: {
         family: lireFamille(p.get('h'), CONFIG_DEFAUT.heading, 'des titres', knownFonts, issues),
         weight: lireGraisse(p.get('hw'), CONFIG_DEFAUT.heading.weight, 'des titres', issues),

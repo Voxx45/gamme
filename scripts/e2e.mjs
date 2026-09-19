@@ -192,7 +192,7 @@ async function main() {
   // Apres tout ca, l'outil doit encore accepter une saisie normale.
   await pageAbimee.goto(BASE + '/#c=zzzzzz', { waitUntil: 'domcontentloaded' })
   await stabiliser(pageAbimee)
-  const champCouleur = pageAbimee.locator('aside input[type="text"]').nth(1)
+  const champCouleur = pageAbimee.locator('[data-test="couleur-hex"]').first()
   await champCouleur.fill('#2f6b45')
   await pageAbimee.waitForTimeout(400)
   const nuancesApres = await nuancesVisibles(pageAbimee)

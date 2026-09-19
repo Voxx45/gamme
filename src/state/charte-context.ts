@@ -11,6 +11,11 @@ export type ValeurCharte = {
   envoyer: (action: Action) => void
   chargerExemple: () => void
   reinitialiser: () => void
+  /** Vrai s'il y a quelque chose à annuler, respectivement à rétablir. */
+  peutAnnuler: boolean
+  peutRetablir: boolean
+  annuler: () => void
+  retablir: () => void
 }
 
 export const ContexteCharte = createContext<ValeurCharte | null>(null)

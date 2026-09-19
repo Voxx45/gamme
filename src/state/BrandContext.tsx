@@ -4,7 +4,7 @@ import { chargerPolice } from '../hooks/useGoogleFont'
 import { buildCharte, CONFIG_NORVA, decodeState, encodeState } from '../lib'
 import type { BrandConfig } from '../lib/types'
 import { ContexteCharte, type ValeurCharte } from './charte-context'
-import { avecPolicesDuCatalogue, CONFIG_VIDE, reducteur } from './charte-reducer'
+import { avecPolicesDuCatalogue, CONFIG_VIDE, ETAT_INITIAL, reducteur, type EtatCharte } from './charte-reducer'
 
 /** Lit la configuration portée par l'URL au premier rendu. */
 function configInitiale(): BrandConfig {
@@ -14,8 +14,13 @@ function configInitiale(): BrandConfig {
   return avecPolicesDuCatalogue(decodeState(fragment, { knownFonts: FAMILLES }).config)
 }
 
+function etatInitial(): EtatCharte {
+  return { ...ETAT_INITIAL, config: configInitiale() }
+}
+
 export function FournisseurCharte({ children }: { children: ReactNode }) {
-  const [config, envoyer] = useReducer(reducteur, undefined, configInitiale)
+  const [etat, envoyer] = useReducer(reducteur, undefined, etatInitial)
+  const { config } = etat
   const vide = config.colors.length === 0
 
   /**
@@ -67,6 +72,27 @@ export function FournisseurCharte({ children }: { children: ReactNode }) {
     envoyer({ type: 'remplacerConfig', config: { ...CONFIG_NORVA, colors: [...CONFIG_NORVA.colors] } })
   }, [])
 
+  const annuler = useCallback(() => envoyer({ type: 'annuler' }), [])
+  const retablir = useCallback(() => envoyer({ type: 'retablir' }), [])
+
+  /*
+   * Ctrl+Z et Ctrl+Maj+Z, comme partout ailleurs. On laisse passer les frappes
+   * qui visent un champ de saisie : dans un champ de texte, Ctrl+Z doit annuler
+   * la frappe, pas la charte.
+   */
+  useEffect(() => {
+    function surTouche(e: KeyboardEvent) {
+      if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== 'z') return
+      const cible = e.target as HTMLElement | null
+      const balise = cible?.tagName
+      if (balise === 'INPUT' || balise === 'TEXTAREA' || cible?.isContentEditable) return
+      e.preventDefault()
+      envoyer({ type: e.shiftKey ? 'retablir' : 'annuler' })
+    }
+    window.addEventListener('keydown', surTouche)
+    return () => window.removeEventListener('keydown', surTouche)
+  }, [])
+
   const reinitialiser = useCallback(() => {
     derniereEcrite.current = ''
     window.history.replaceState(null, '', window.location.pathname + window.location.search)
@@ -74,8 +100,19 @@ export function FournisseurCharte({ children }: { children: ReactNode }) {
   }, [])
 
   const valeur = useMemo<ValeurCharte>(
-    () => ({ config, charte, vide, envoyer, chargerExemple, reinitialiser }),
-    [config, charte, vide, chargerExemple, reinitialiser],
+    () => ({
+      config,
+      charte,
+      vide,
+      envoyer,
+      chargerExemple,
+      reinitialiser,
+      peutAnnuler: etat.passe.length > 0,
+      peutRetablir: etat.futur.length > 0,
+      annuler,
+      retablir,
+    }),
+    [config, charte, vide, chargerExemple, reinitialiser, etat.passe.length, etat.futur.length, annuler, retablir],
   )
 
   return <ContexteCharte.Provider value={valeur}>{children}</ContexteCharte.Provider>

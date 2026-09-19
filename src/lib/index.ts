@@ -13,6 +13,8 @@ export { generateScale, swatchAt } from './color/scale'
 export { contrastRatio, evaluatePair, relativeLuminance, SEUILS } from './color/contrast'
 export { attenuer } from './color/muted'
 export { encreLisible } from './color/readable'
+export { DEFICIENCES, simuler } from './color/vision'
+export type { Deficience } from './color/vision'
 export { suggestAccessible } from './color/suggest'
 export type { Suggestion, SuggestionOptions, NiveauVise, TailleTexte } from './color/suggest'
 

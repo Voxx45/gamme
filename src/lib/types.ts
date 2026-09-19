@@ -156,6 +156,12 @@ export type BrandConfig = {
   name: string
   /** De une à quatre couleurs, en hexadécimal sur 6 chiffres. */
   colors: string[]
+  /**
+   * Nom donné à chaque couleur, dans le même ordre. Une chaîne vide laisse le
+   * nom de position — « Primaire », « Secondaire »… — et le slug par défaut
+   * dans les exports.
+   */
+  colorNames: string[]
   heading: FontChoice
   body: FontChoice
   /** Taille de base en pixels. */

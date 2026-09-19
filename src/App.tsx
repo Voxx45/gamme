@@ -4,6 +4,7 @@ import { ContrastPanel } from './components/panels/ContrastPanel'
 import { ExportPanel } from './components/panels/ExportPanel'
 import { PalettePanel } from './components/panels/PalettePanel'
 import { TypePanel } from './components/panels/TypePanel'
+import { ChoixTheme } from './components/layout/Reglages'
 import { Sidebar } from './components/layout/Sidebar'
 import { Bouton, BoutonCopier } from './components/ui/Base'
 import { classes } from './components/ui/classes'
@@ -16,6 +17,7 @@ import { ACCROCHE, AUTEUR, DEPOT, NOM_OUTIL, SITE } from './config'
 import { shareUrl } from './lib'
 import { Lien } from './routage-lien'
 import { useChemin } from './routage'
+import { FournisseurPreferences } from './state/FournisseurPreferences'
 import { FournisseurCharte } from './state/BrandContext'
 import { useCharte } from './state/charte-context'
 
@@ -27,13 +29,59 @@ const VOLETS = [
   { cle: 'export', titre: 'Export', rendu: () => <ExportPanel /> },
 ] as const
 
-function Entete({ simplifiee = false }: { simplifiee?: boolean }) {
-  const { vide, config, chargerExemple, reinitialiser } = useCharte()
+function BoutonIcone({
+  libelle,
+  raccourci,
+  desactive,
+  chemin,
+  onClick,
+  className,
+}: {
+  libelle: string
+  raccourci: string
+  desactive: boolean
+  chemin: string
+  onClick: () => void
+  className?: string
+}) {
+  return (
+    <button
+      type="button"
+      disabled={desactive}
+      aria-label={libelle}
+      title={`${libelle} (${raccourci})`}
+      onClick={onClick}
+      className={classes(
+        'flex h-9 w-9 shrink-0 items-center justify-center text-ink-muted transition-colors',
+        'hover:bg-surface hover:text-ink disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-transparent',
+        className,
+      )}
+    >
+      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+        <path d={chemin} stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </button>
+  )
+}
+
+function Entete({
+  simplifiee = false,
+  titrePrincipal = false,
+}: {
+  simplifiee?: boolean
+  /*
+   * Une page doit porter un `h1` et un seul. Sur l'atelier, c'est le nom de
+   * l'outil dans l'en-tête ; sur l'état vide et sur « à propos », c'est le
+   * titre de la page, et l'en-tête redevient un simple lien.
+   */
+  titrePrincipal?: boolean
+}) {
+  const { vide, config, chargerExemple, reinitialiser, peutAnnuler, peutRetablir, annuler, retablir } = useCharte()
   const annoncer = useAnnonce()
 
-  // L'URL courante porte deja la charte ; on la reconstruit depuis la
-  // configuration plutot que de lire `location.hash`, qui peut avoir jusqu'a
-  // 200 ms de retard sur l'etat a cause du debounce d'ecriture.
+  // L'URL courante porte déjà la charte ; on la reconstruit depuis la
+  // configuration plutôt que de lire `location.hash`, qui peut avoir jusqu'à
+  // 200 ms de retard sur l'état à cause du délai d'écriture.
   const lien =
     typeof window === 'undefined' ? '' : shareUrl(config, window.location.origin + window.location.pathname)
 
@@ -41,25 +89,63 @@ function Entete({ simplifiee = false }: { simplifiee?: boolean }) {
     <header className="border-b border-rule bg-paper">
       <div className="mx-auto flex max-w-[1560px] flex-wrap items-center justify-between gap-x-6 gap-y-3 px-5 py-4 sm:px-8">
         <div className="flex items-baseline gap-3">
-          <Lien href="/" className="text-[16px] font-semibold tracking-[-0.01em] text-ink">
-            {NOM_OUTIL}
-          </Lien>
+          {titrePrincipal ? (
+            <h1 className="text-[16px] font-semibold tracking-[-0.01em] text-ink">
+              <Lien href="/">{NOM_OUTIL}</Lien>
+            </h1>
+          ) : (
+            <Lien href="/" className="text-[16px] font-semibold tracking-[-0.01em] text-ink">
+              {NOM_OUTIL}
+            </Lien>
+          )}
           <p className="hidden text-[13px] text-ink-muted sm:block">{ACCROCHE}</p>
         </div>
 
         {simplifiee ? (
-          <Lien
-            href="/"
-            className="inline-flex h-9 items-center rounded-[2px] border border-rule-strong px-3 text-[13px] font-medium text-ink transition-colors hover:bg-surface"
-          >
-            Ouvrir l’outil
-          </Lien>
+          <div className="flex items-center gap-2">
+            <ChoixTheme />
+            <Lien
+              href="/"
+              className="inline-flex h-9 items-center rounded-[2px] border border-rule-strong px-3 text-[13px] font-medium text-ink transition-colors hover:bg-surface"
+            >
+              Ouvrir l’outil
+            </Lien>
+          </div>
         ) : (
-        <div className="flex items-center gap-2">
-            <p className="hidden text-[12px] text-ink-muted lg:block">
+          <div className="flex items-center gap-2">
+            <p className="hidden text-[12px] text-ink-muted xl:block">
               Gratuit · sans compte · tout se calcule dans votre navigateur
             </p>
-            {!vide ? (
+
+            {vide ? null : (
+              <div className="flex shrink-0 overflow-hidden rounded-[2px] border border-rule-strong">
+                <BoutonIcone
+                  libelle="Annuler la dernière modification"
+                  raccourci="Ctrl+Z"
+                  desactive={!peutAnnuler}
+                  chemin="M2.5 6.5h7a3 3 0 0 1 0 6H6M2.5 6.5 5 4M2.5 6.5 5 9"
+                  onClick={() => {
+                    annuler()
+                    annoncer('Modification annulée.', 'immediate')
+                  }}
+                />
+                <BoutonIcone
+                  libelle="Rétablir la modification annulée"
+                  raccourci="Ctrl+Maj+Z"
+                  desactive={!peutRetablir}
+                  chemin="M12.5 6.5h-7a3 3 0 0 0 0 6H9M12.5 6.5 10 4M12.5 6.5 10 9"
+                  className="border-l border-rule-strong"
+                  onClick={() => {
+                    retablir()
+                    annoncer('Modification rétablie.', 'immediate')
+                  }}
+                />
+              </div>
+            )}
+
+            <ChoixTheme />
+
+            {vide ? null : (
               <>
                 <Bouton
                   variante="discret"
@@ -89,7 +175,8 @@ function Entete({ simplifiee = false }: { simplifiee?: boolean }) {
                   className="sm:hidden"
                 />
               </>
-            ) : null}
+            )}
+
             <Bouton
               variante={vide ? 'principal' : 'secondaire'}
               onClick={() => {
@@ -100,7 +187,7 @@ function Entete({ simplifiee = false }: { simplifiee?: boolean }) {
               Exemple
             </Bouton>
           </div>
-    )}
+        )}
       </div>
     </header>
   )
@@ -150,9 +237,9 @@ function EtatVide() {
     <div className="flex flex-1 items-center justify-center px-5 py-16">
       <div className="max-w-[540px]">
         <p className="surtitre">Commencer</p>
-        <h2 className="mt-3 text-[30px] font-semibold leading-[1.15] tracking-[-0.02em] text-ink">
+        <h1 className="mt-3 text-[30px] font-semibold leading-[1.15] tracking-[-0.02em] text-ink">
           Quatre couleurs, deux polices.
-        </h2>
+        </h1>
         <p className="mt-4 text-[15px] leading-relaxed text-ink-soft">
           Vous obtenez onze nuances par couleur calculées en OKLCH, la matrice de contrastes WCAG de toutes les paires
           avec une correction proposée pour chacune de celles qui échouent, une échelle typographique, un brand board
@@ -311,7 +398,7 @@ function Atelier() {
 
   return (
     <>
-      <Entete />
+      <Entete titrePrincipal />
       <main id="contenu" className="mx-auto w-full max-w-[1560px] flex-1 px-5 py-7 sm:px-8">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[292px_minmax(0,1fr)] lg:gap-12">
           <aside aria-label="Réglages de la charte" className="lg:sticky lg:top-7 lg:self-start">
@@ -346,19 +433,21 @@ function Pages() {
 export default function App() {
   return (
     <GardeFou>
-      <FournisseurAnnonces>
-        <FournisseurCharte>
-          <a
-            href="#contenu"
-            className="visuellement-masque focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:h-auto focus:w-auto focus:rounded-[2px] focus:bg-ink focus:px-3 focus:py-2 focus:text-[13px] focus:text-paper focus:[clip-path:none]"
-          >
-            Aller au contenu
-          </a>
-          <div className="flex min-h-screen flex-col">
-            <Pages />
-          </div>
-        </FournisseurCharte>
-      </FournisseurAnnonces>
+      <FournisseurPreferences>
+        <FournisseurAnnonces>
+          <FournisseurCharte>
+            <a
+              href="#contenu"
+              className="visuellement-masque focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:h-auto focus:w-auto focus:rounded-[2px] focus:bg-ink focus:px-3 focus:py-2 focus:text-[13px] focus:text-paper focus:[clip-path:none]"
+            >
+              Aller au contenu
+            </a>
+            <div className="flex min-h-screen flex-col">
+              <Pages />
+            </div>
+          </FournisseurCharte>
+        </FournisseurAnnonces>
+      </FournisseurPreferences>
     </GardeFou>
   )
 }

@@ -12,22 +12,51 @@
  * Un outil qui juge le contraste des autres n'a pas le droit d'échouer au sien.
  */
 @theme {
+  /* Thème clair — les valeurs par défaut. */
   --color-paper: #faf9f6;
   --color-surface: #f2f0ea;
   --color-ink: #14130f;
   --color-ink-soft: #46433c;
-  --color-ink-muted: #6e6a60;
+  --color-ink-muted: #58554d;
   --color-rule: #e2ded3;
   --color-rule-strong: #8b8578;
   --color-accent: #8c3a2b;
   --color-accent-wash: #f5e9e5;
-  --color-pass: #2f6b45;
+  --color-pass: #2d5f3e;
   --color-fail: #9b2c24;
 
   --font-ui: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
 
   --radius-card: 3px;
+}
+
+/*
+ * Thème sombre.
+ *
+ * Ce n'est pas une inversion : un texte blanc pur sur un noir pur éblouit et
+ * fait vibrer les contours. On garde donc l'encre chaude comme fond et un blanc
+ * légèrement rompu comme texte.
+ *
+ * Les deux jeux sont vérifiés au même barème. Chaque couleur de texte atteint
+ * AAA sur son fond — 7:1 au minimum — et les bordures de champ dépassent les
+ * 3:1 qu'exige le critère 1.4.11 pour un élément d'interface. Un outil qui juge
+ * le contraste des autres se doit de tenir ses deux thèmes au même niveau.
+ */
+[data-theme='sombre'] {
+  --color-paper: #14130f;
+  --color-surface: #1e1c17;
+  --color-ink: #f4f2ec;
+  --color-ink-soft: #cbc6ba;
+  --color-ink-muted: #a8a291;
+  --color-rule: #2e2b24;
+  --color-rule-strong: #6f6a55;
+  --color-accent: #e08a60;
+  --color-accent-wash: #2f241d;
+  --color-pass: #7bc496;
+  --color-fail: #f08c86;
+
+  color-scheme: dark;
 }
 
 @layer base {
@@ -58,10 +87,6 @@
     outline-offset: 2px;
     border-radius: 2px;
     box-shadow: 0 0 0 4px var(--color-paper);
-  }
-
-  [data-theme="sombre"] :focus-visible {
-    box-shadow: 0 0 0 4px rgb(0 0 0 / 0.6);
   }
 
   ::selection {

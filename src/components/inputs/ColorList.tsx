@@ -25,7 +25,17 @@ function Fleche({ sens }: { sens: 'haut' | 'bas' }) {
   )
 }
 
-function LigneCouleur({ index, hex, total }: { index: number; hex: string; total: number }) {
+function LigneCouleur({
+  index,
+  hex,
+  nomSaisi,
+  total,
+}: {
+  index: number
+  hex: string
+  nomSaisi: string
+  total: number
+}) {
   const { envoyer } = useCharte()
   const annoncer = useAnnonce()
   const idChamp = useId()
@@ -65,14 +75,29 @@ function LigneCouleur({ index, hex, total }: { index: number; hex: string; total
     if (r.value.hex !== hex) envoyer({ type: 'modifierCouleur', index, hex: r.value.hex })
   }
 
-  const nom = NOMS_POSITION[index] ?? `Couleur ${index + 1}`
+  const nom = nomSaisi.trim() !== '' ? nomSaisi : (NOMS_POSITION[index] ?? `Couleur ${index + 1}`)
 
   return (
     <li className="flex flex-col gap-1.5">
       <div className="flex items-center gap-2">
-        <label htmlFor={idChamp} className="surtitre flex-1">
-          {nom}
-        </label>
+        {/*
+          Le nom est modifiable : il devient le segment du token exporté, donc
+          `--color-encre-500` plutôt que `--color-primary-500`. Un champ nu,
+          sans bordure, pour qu'il se lise comme une étiquette tant qu'on n'y
+          touche pas.
+        */}
+        <input
+          type="text"
+          value={nomSaisi}
+          maxLength={20}
+          spellCheck={false}
+          autoComplete="off"
+          aria-label={`Nom de la couleur ${index + 1}`}
+          data-test="couleur-nom"
+          placeholder={NOMS_POSITION[index] ?? `Couleur ${index + 1}`}
+          onChange={(e) => envoyer({ type: 'nommerCouleur', index, nom: e.target.value })}
+          className="surtitre min-w-0 flex-1 rounded-[2px] border border-transparent bg-transparent px-1 py-0.5 text-ink placeholder:text-ink-muted hover:border-rule focus:border-accent focus:text-ink"
+        />
         <div className="flex items-center gap-0.5">
           <Bouton
             variante="discret"
@@ -135,6 +160,12 @@ function LigneCouleur({ index, hex, total }: { index: number; hex: string; total
           onChange={(e) => surSaisie(e.target.value)}
           aria-invalid={erreur !== null}
           aria-describedby={erreur ? `${idChamp}-erreur` : undefined}
+          /*
+            Étiquette explicite : le nom de la couleur est devenu un champ
+            modifiable, il ne peut donc plus servir de `label` à celui-ci.
+          */
+          aria-label={`Valeur de ${nom}`}
+          data-test="couleur-hex"
           placeholder="#1b2a41"
           className={classes(CLASSES_SAISIE, 'tabulaire', erreur && 'border-fail')}
         />
@@ -160,7 +191,7 @@ export function ColorList() {
         {config.colors.map((hex, i) => (
           // Clé par position, et non par couleur : sinon chaque frappe valide
           // remonterait la ligne et le champ perdrait le focus.
-          <LigneCouleur key={i} index={i} hex={hex} total={total} />
+          <LigneCouleur key={i} index={i} hex={hex} nomSaisi={config.colorNames[i] ?? ''} total={total} />
         ))}
       </ul>
 
@@ -168,7 +199,7 @@ export function ColorList() {
         variante="secondaire"
         disabled={total >= MAX_COULEURS}
         onClick={() => {
-          const hex = AMORCES[total] ?? '#6e6a60'
+          const hex = AMORCES[total] ?? '#58554d'
           envoyer({ type: 'ajouterCouleur', hex })
           annoncer(`Couleur ajoutée. ${total + 1} couleurs sur ${MAX_COULEURS}.`)
         }}

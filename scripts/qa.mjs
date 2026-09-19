@@ -191,16 +191,16 @@ async function main() {
     waitUntil: 'domcontentloaded',
   })
   await stabiliser(clavier)
-  const avantAjout = await clavier.locator('aside input[type="text"]').count()
+  const avantAjout = await clavier.locator('[data-test="couleur-hex"]').count()
   await clavier.getByRole('button', { name: /Ajouter une couleur/ }).focus()
   verifier(await focusVisible(clavier), 'anneau de focus visible sur le bouton d ajout')
   await clavier.keyboard.press('Enter')
   await clavier.waitForTimeout(400)
-  const apresAjout = await clavier.locator('aside input[type="text"]').count()
+  const apresAjout = await clavier.locator('[data-test="couleur-hex"]').count()
   verifier(apresAjout === avantAjout + 1, 'couleur ajoutee par Entree', `${avantAjout} -> ${apresAjout}`)
 
   // -- Saisir une couleur au clavier, dans le champ
-  const champ = clavier.locator('aside input[type="text"]').nth(3)
+  const champ = clavier.locator('[data-test="couleur-hex"]').nth(2)
   await champ.focus()
   await clavier.keyboard.press('Control+a')
   await clavier.keyboard.type('#2f6b45')
@@ -299,7 +299,7 @@ async function main() {
   await limites.goto(BASE + '/' + NORVA, { waitUntil: 'domcontentloaded' })
   await stabiliser(limites)
 
-  const premierChamp = limites.locator('aside input[type="text"]').nth(1)
+  const premierChamp = limites.locator('[data-test="couleur-hex"]').first()
   await premierChamp.fill('pas une couleur')
   await limites.waitForTimeout(400)
   verifier(
