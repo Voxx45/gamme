@@ -17,6 +17,7 @@ import {
   filterDeficiencyTrit,
   formatHex,
   interpolate,
+  modeHsl,
   modeOklab,
   modeOklch,
   modeRgb,
@@ -27,7 +28,19 @@ import {
   useMode as enregistrerMode,
 } from 'culori/fn'
 
+/*
+ * Les quatre espaces dont l'outil a besoin, et pas un de plus :
+ *
+ * — `rgb` pour l'hexadécimal, `rgb()` et toutes les sorties ;
+ * — `hsl` parce que l'outil annonce accepter cette syntaxe en saisie ;
+ * — `oklch` pour les échelles ;
+ * — `oklab` pour l'interpolation d'`attenuer`.
+ *
+ * Oublier `hsl` ici a suffi à casser la saisie en `hsl()` sans que rien ne le
+ * signale à la compilation : le test ci-dessous existe pour ça.
+ */
 enregistrerMode(modeRgb)
+enregistrerMode(modeHsl)
 enregistrerMode(modeOklab)
 enregistrerMode(modeOklch)
 
