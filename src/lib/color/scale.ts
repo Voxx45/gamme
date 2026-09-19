@@ -21,6 +21,22 @@ const CLARTE: readonly number[] = [0.971, 0.936, 0.885, 0.809, 0.707, 0.623, 0.5
  */
 const CHROMA: readonly number[] = [0.20, 0.35, 0.58, 0.80, 0.95, 1.0, 0.97, 0.88, 0.76, 0.66, 0.44]
 
+/**
+ * Plafond d'amplification du chroma, relatif à la couleur saisie.
+ *
+ * Sans lui, une couleur foncée ou très claire s'ancre à une extrémité de la
+ * courbe, où le facteur est faible, et la normalisation amplifie le milieu de
+ * l'échelle d'un facteur qui peut atteindre cinq. Un marine d'encre ressortait
+ * ainsi en bleu bleuet au palier 500 : la rampe restait cohérente en teinte,
+ * mais avait cessé d'être la même couleur.
+ *
+ * 1,6 laisse assez de latitude pour des tons moyens utilisables, et retient
+ * l'échelle dans la famille de la couleur d'origine. Le plafond s'applique au
+ * résultat, pas à la normalisation : il ne peut donc jamais creuser de bosse
+ * sous la couleur saisie, seulement aplatir le sommet de la cloche.
+ */
+const PLAFOND_CHROMA = 1.6
+
 /** Trouve l'index du palier dont la clarté de référence est la plus proche de `l`. */
 function indexAncrage(l: number): number {
   let meilleur = 0
@@ -47,7 +63,11 @@ function indexAncrage(l: number): number {
  *    comprise entre ses deux voisins : la monotonie de l'échelle est préservée
  *    sans avoir à la corriger après coup.
  *
- * 2. **Aucun palier ne sort du gamut sRGB.** Chaque palier est ramené dans le
+ * 2. **Aucun palier ne s'éloigne de la couleur saisie.** Le chroma est modulé
+ *    en cloche, mais plafonné à `PLAFOND_CHROMA` fois celui de la couleur
+ *    d'origine : l'échelle reste dans sa famille.
+ *
+ * 3. **Aucun palier ne sort du gamut sRGB.** Chaque palier est ramené dans le
  *    gamut par l'algorithme de CSS Color 4, puis son OKLCH est re-dérivé depuis
  *    l'hexadécimal obtenu — la notation `oklch()` exportée décrit donc toujours
  *    la couleur réellement affichée, et non une intention théorique.
@@ -72,7 +92,11 @@ export function generateScale(couleur: string | ParsedColor): ColorScale {
     // Sur le palier d'ancrage, la couleur d'origine passe telle quelle.
     const vise: OklchColor = estAncre
       ? { l, c, h }
-      : { l: CLARTE[i]!, c: (c * CHROMA[i]!) / facteurAncre, h }
+      : {
+          l: CLARTE[i]!,
+          c: Math.min((c * CHROMA[i]!) / facteurAncre, c * PLAFOND_CHROMA),
+          h,
+        }
 
     const hex = oklchVersHex(vise)
     const reel = versOklch(hex) ?? vise

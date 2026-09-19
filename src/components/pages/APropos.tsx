@@ -1,4 +1,4 @@
-import { NOM_OUTIL, SITE, DEPOT } from '../../config'
+import { DEPOT, EMAIL, LINKEDIN, NOM_OUTIL, SITE } from '../../config'
 import { Lien } from '../../routage-lien'
 
 function Bloc({ titre, children }: { titre: string; children: React.ReactNode }) {
@@ -73,10 +73,15 @@ export function APropos() {
               Portfolio — <LienExterne href={SITE}>pineauewan.com</LienExterne>
             </li>
             <li>
-              Code source — <LienExterne href={DEPOT}>le dépôt GitHub</LienExterne>
+              Écrire — <LienExterne href={`mailto:${EMAIL}`}>{EMAIL}</LienExterne>
             </li>
-            <li className="text-ink-muted">
-              LinkedIn et adresse e-mail : à compléter avant le lancement.
+            {LINKEDIN === '' ? null : (
+              <li>
+                LinkedIn — <LienExterne href={LINKEDIN}>mon profil</LienExterne>
+              </li>
+            )}
+            <li>
+              Code source — <LienExterne href={DEPOT}>le dépôt GitHub</LienExterne>
             </li>
           </ul>
         </Bloc>

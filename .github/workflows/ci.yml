@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verifier:
+    name: Build, types, lint et tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      # `npm run build` enchaine la verification TypeScript et le build Vite :
+      # un type faux casse la CI avant meme d'arriver aux tests.
+      - name: Build de production
+        run: npm run build
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests unitaires
+        run: npm test
+
+  navigateur:
+    name: Bout en bout et accessibilite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Installer Chromium
+        run: npx playwright install --with-deps chromium
+
+      - run: npm run build
+
+      # On sert le build de production, puis on attend qu'il reponde : sans
+      # cette attente la suite demarre parfois avant le serveur.
+      - name: Servir et verifier
+        run: |
+          npx vite preview --port 4173 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:4173/ > /dev/null && break
+            sleep 1
+          done
+          BASE=http://localhost:4173 npm run e2e
+          BASE=http://localhost:4173 npm run qa
+
+      - name: Conserver les rapports en cas d echec
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapports
+          path: rapports/
+          retention-days: 7

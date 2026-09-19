@@ -10,6 +10,7 @@ import { classes } from './components/ui/classes'
 import { useAnnonce } from './hooks/annonce-context'
 import { GRAND_ECRAN, useMediaQuery } from './hooks/useMediaQuery'
 import { FournisseurAnnonces } from './hooks/useAnnonce'
+import { GardeFou } from './components/GardeFou'
 import { APropos } from './components/pages/APropos'
 import { ACCROCHE, AUTEUR, DEPOT, NOM_OUTIL, SITE } from './config'
 import { shareUrl } from './lib'
@@ -344,18 +345,20 @@ function Pages() {
 
 export default function App() {
   return (
-    <FournisseurAnnonces>
-      <FournisseurCharte>
-        <a
-          href="#contenu"
-          className="visuellement-masque focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:h-auto focus:w-auto focus:rounded-[2px] focus:bg-ink focus:px-3 focus:py-2 focus:text-[13px] focus:text-paper focus:[clip-path:none]"
-        >
-          Aller au contenu
-        </a>
-        <div className="flex min-h-screen flex-col">
-          <Pages />
-        </div>
-      </FournisseurCharte>
-    </FournisseurAnnonces>
+    <GardeFou>
+      <FournisseurAnnonces>
+        <FournisseurCharte>
+          <a
+            href="#contenu"
+            className="visuellement-masque focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:h-auto focus:w-auto focus:rounded-[2px] focus:bg-ink focus:px-3 focus:py-2 focus:text-[13px] focus:text-paper focus:[clip-path:none]"
+          >
+            Aller au contenu
+          </a>
+          <div className="flex min-h-screen flex-col">
+            <Pages />
+          </div>
+        </FournisseurCharte>
+      </FournisseurAnnonces>
+    </GardeFou>
   )
 }

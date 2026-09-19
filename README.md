@@ -1,5 +1,8 @@
 # Gamme
 
+[![CI](https://github.com/Voxx45/gamme/actions/workflows/ci.yml/badge.svg)](https://github.com/Voxx45/gamme/actions/workflows/ci.yml)
+[![Licence MIT](https://img.shields.io/badge/licence-MIT-1b2a41)](LICENSE)
+
 **Générateur de mini charte graphique.** Quatre couleurs, deux polices, et la
 charte complète en quelques secondes.
 
@@ -9,6 +12,16 @@ rien de ce que vous saisissez ne le quitte.
 **[→ Ouvrir l'outil](https://gamme-murex.vercel.app)** · [À propos](https://gamme-murex.vercel.app/a-propos)
 
 ![Le brand board de l'exemple NØRVA : le nom en Cormorant Garamond, un titre de section, un bouton, une carte et les quatre échelles de couleurs.](public/og.png)
+
+---
+
+## L'outil
+
+| | |
+|---|---|
+| ![Le panneau Palette : quatre échelles de onze nuances, avec la couleur saisie encadrée sur son palier d'ancrage.](docs/palette.png) | **Palette** — onze nuances par couleur, la couleur saisie restituée telle quelle. |
+| ![Le panneau Contrastes : une matrice six par six avec les ratios et les pastilles AA/AAA, suivie de la liste des corrections proposées.](docs/contrastes.png) | **Contrastes** — la matrice complète, puis une correction cliquable par paire en échec. |
+| ![Le panneau Typographie : neuf niveaux, chacun avec sa taille en pixels et en rem, son interlignage conseillé, et un spécimen rendu dans la police choisie.](docs/typographie.png) | **Typographie** — l'échelle rendue dans vos polices, interlignage compris. |
 
 ---
 

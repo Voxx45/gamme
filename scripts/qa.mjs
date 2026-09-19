@@ -345,10 +345,45 @@ async function main() {
   await limites.waitForTimeout(500)
   const resume = await limites.locator('p.tabulaire').first().textContent()
   verifier((resume ?? '').includes('/30'), 'quatre couleurs proches : la matrice se calcule', (resume ?? '').trim())
-  const correctionsImpossibles = await limites.getByText(/Aucune nuance de cette teinte ne passe/).count()
-  verifier(true, 'quatre couleurs proches : suggestions sans pis-aller', `${correctionsImpossibles} paire(s) sans solution, annoncees comme telles`)
-  const nuancesProches = await limites.locator('button[title^="Copier #"]').count()
-  verifier(true, 'quatre couleurs proches : les echelles restent distinctes', `${nuancesProches} nuances`)
+
+  /*
+   * Chaque paire en echec doit recevoir soit une nuance cliquable, soit le
+   * message qui dit qu'aucune ne passe. Une ligne muette serait un cul-de-sac :
+   * on annonce un probleme sans rien proposer ni expliquer pourquoi.
+   */
+  const lignes = await limites.evaluate(() => {
+    const liste = [...document.querySelectorAll('li')].filter((li) => (li.textContent ?? '').includes(' sur '))
+    return liste.map((li) => ({
+      proposition: li.querySelector('button') !== null,
+      explication: /Aucune nuance de cette teinte ne passe/.test(li.textContent ?? ''),
+    }))
+  })
+  verifier(
+    lignes.length > 0 && lignes.every((l) => l.proposition || l.explication),
+    'quatre couleurs proches : aucune correction muette',
+    `${lignes.length} lignes, ${lignes.filter((l) => l.explication).length} sans solution mais annoncees`,
+  )
+
+  // Quatre verts a un cheveu l'un de l'autre doivent produire quatre echelles
+  // reellement differentes : sinon l'ancrage ecrase les ecarts.
+  await limites.getByRole('tab', { name: 'Palette', exact: true }).click()
+  await limites.waitForTimeout(400)
+  const nuancesProches = await limites.locator('button[title^="Copier #"]').evaluateAll((b) =>
+    b.map((x) => x.getAttribute('title')),
+  )
+  const distinctes = new Set(nuancesProches).size
+  /*
+   * Quatre verts a 1 % l'un de l'autre produisent forcement quelques collisions
+   * apres quantification sur 8 bits, surtout aux extremites ou les rampes se
+   * rejoignent presque. Ce qui compte n'est pas l'absence de doublon mais que
+   * les quatre echelles ne se soient pas effondrees en une seule : une seule
+   * rampe ne ferait que 11 valeurs.
+   */
+  verifier(
+    nuancesProches.length === 44 && distinctes >= 30,
+    'quatre couleurs proches : les quatre echelles restent distinctes',
+    `${nuancesProches.length} nuances, ${distinctes} valeurs differentes, ${44 - distinctes} collisions`,
+  )
 
   // -- Une police qui ne charge pas
   const sansPolice = await contexte.newPage()

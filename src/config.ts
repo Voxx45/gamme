@@ -11,3 +11,10 @@ export const URL_PUBLIQUE = 'https://gamme-murex.vercel.app'
 export const SITE = 'https://pineauewan.com'
 export const DEPOT = 'https://github.com/Voxx45/gamme'
 export const AUTEUR = 'Ewan Pineau'
+export const EMAIL = 'pineauewan0@gmail.com'
+
+/**
+ * Profil LinkedIn. Laisser vide masque la ligne sur la page « à propos ».
+ * À renseigner avant le lancement : c'est là que le post renverra.
+ */
+export const LINKEDIN = ''

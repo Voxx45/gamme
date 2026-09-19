@@ -148,3 +148,26 @@ describe('generateScale — cas limites', () => {
     expect(() => generateScale('pas une couleur')).toThrow()
   })
 })
+
+describe('generateScale — le plafond de chroma', () => {
+  it('ne laisse aucun palier dépasser 1,6 fois le chroma de la couleur saisie', () => {
+    // Sans plafond, une couleur ancrée à une extrémité voyait le milieu de son
+    // échelle amplifié jusqu'à cinq fois : la rampe changeait de couleur.
+    for (const couleur of ECHANTILLONS) {
+      const s = generateScale(couleur)
+      const source = s.source.oklch.c
+      if (source < 0.01) continue // une couleur grise n'a rien à amplifier
+      for (const w of s.swatches) {
+        expect(w.oklch.c / source, `${couleur} palier ${w.step}`).toBeLessThanOrEqual(1.65)
+      }
+    }
+  })
+
+  it('garde une amplification utile : le milieu reste plus vif que la source foncée', () => {
+    // Le plafond ne doit pas aplatir l'échelle au point de la rendre inutile.
+    const s = generateScale('#1b2a41')
+    const source = s.source.oklch.c
+    const milieu = s.swatches.find((w) => w.step === 500)!
+    expect(milieu.oklch.c).toBeGreaterThan(source)
+  })
+})
