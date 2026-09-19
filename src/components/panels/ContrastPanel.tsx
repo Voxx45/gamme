@@ -166,7 +166,7 @@ export function ContrastPanel() {
         className="defilement-fin overflow-x-auto"
         tabIndex={0}
         role="region"
-        aria-label="Matrice de contrastes, defilement horizontal"
+        aria-label="Matrice de contrastes, défilement horizontal"
       >
         <table className="w-full min-w-[640px] border-collapse">
           <caption className="visuellement-masque">

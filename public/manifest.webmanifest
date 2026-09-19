@@ -1,7 +1,7 @@
 {
-  "name": "Gamme — generateur de mini charte graphique",
+  "name": "Gamme — générateur de mini charte graphique",
   "short_name": "Gamme",
-  "description": "Quatre couleurs, deux polices : nuances OKLCH, contrastes WCAG, echelle typographique, brand board et exports. Gratuit, sans compte, sans serveur.",
+  "description": "Quatre couleurs, deux polices : nuances OKLCH, contrastes WCAG, échelle typographique, brand board et exports. Gratuit, sans compte, sans serveur.",
   "lang": "fr",
   "start_url": "/",
   "scope": "/",

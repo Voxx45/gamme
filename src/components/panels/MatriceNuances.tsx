@@ -128,7 +128,7 @@ export function MatriceNuances({ charte, noms }: { charte: Charte; noms: string[
         className="defilement-fin overflow-x-auto"
         tabIndex={0}
         role="region"
-        aria-label="Grille nuance par nuance, defilement horizontal"
+        aria-label="Grille nuance par nuance, défilement horizontal"
       >
         <table className="w-full min-w-[620px] border-collapse">
           <caption className="visuellement-masque">

@@ -660,3 +660,77 @@ c'est la raison d'avoir une mesure.
 _(à compléter)_
 
 ---
+
+## Étape 8 — Le profil LinkedIn, et ce qu'il a révélé
+
+**Environ 40 minutes.**
+
+Ewan a renseigné `LINKEDIN` dans `src/config.ts`. Une ligne. Elle a cassé deux
+choses, et en a révélé une troisième qui dormait depuis l'étape 6.
+
+### Un lien qui ne menait nulle part
+
+La valeur saisie était `www.linkedin.com/in/ewan-pineau`, sans schéma. Pour un
+navigateur, ce n'est pas une adresse incomplète : c'est un chemin **relatif**.
+Posée dans un `href`, elle se résout contre la page courante et donne
+`https://gamme-murex.vercel.app/www.linkedin.com/in/ewan-pineau` — que la
+réécriture attrape-tout de Vercel sert en renvoyant l'application elle-même.
+
+Le lien « mon profil » aurait donc rechargé l'outil. Sans erreur, sans 404, sans
+rien à voir dans la console. Le genre de défaut qu'on ne trouve qu'en cliquant.
+
+`src/config.test.ts` vérifie désormais que chaque adresse du projet passe
+`new URL()` et emploie `https:`. Vérifié en le faisant échouer sur l'ancienne
+valeur avant de le déclarer bon.
+
+### Un build cassé par un type littéral
+
+TypeScript déduisait de `export const LINKEDIN = ''` le type littéral `''`.
+Tant que la constante était vide, le garde `LINKEDIN === ''` de la page
+« à propos » compilait. Remplie, les deux types n'ont plus d'intersection et
+`tsc` refuse la comparaison — **TS2367**. Le build de production échouait.
+
+L'annotation `: string` est donc volontaire, et commentée comme telle : elle dit
+que cette valeur est configurable et peut être vide.
+
+### Ce qui dormait depuis l'étape 6 : une carte sans accents
+
+En allant vérifier ce que LinkedIn afficherait, j'ai relu `index.html`. Le titre
+était « Gamme — generateur de mini charte graphique ». La description parlait de
+« correction proposee », d'« echelle typographique », de « contrastes verifies ».
+Le manifeste, pareil. Le bloc `<noscript>` entier, pareil.
+
+La cause n'est pas l'encodage — le fichier est en UTF-8, le tiret cadratin et
+les apostrophes typographiques étaient bien là. C'est un contournement de ma
+part : les séquences d'échappement Unicode passaient mal dans mes appels
+d'outils pendant l'étape 6, j'ai écrit sans accents pour avancer, et je ne suis
+jamais revenu.
+
+L'ironie est complète : l'image Open Graph, elle, est parfaite — « a été
+vérifiée », « critères », « hiérarchie ». Elle est produite par l'outil, qui a
+toujours été correctement accentué. Seul le texte **autour** de l'image était
+fautif. C'est-à-dire exactement le titre et la description que LinkedIn affiche
+sous la vignette, la première chose que lira chaque visiteur du post.
+
+Deux `aria-label` disaient aussi « defilement » au lieu de « défilement ». Sur
+un outil d'accessibilité, lus par un lecteur d'écran français.
+
+### Ce que ça dit
+
+Trois défauts, tous invisibles au build et aux 279 vérifications automatiques,
+tous sur le chemin exact du lancement. Aucun ne relève du calcul, de
+l'accessibilité ou de la performance — les trois choses que ce projet mesure le
+mieux. Ils relèvent de la **finition éditoriale**, qui ne se teste pas : elle se
+relit.
+
+| | |
+|---|---|
+| Tests unitaires | 190 → **196** |
+| Vérifications de bout en bout | 83, inchangé |
+| Premier chargement | 47,42 ko gzip, inchangé |
+
+### Corrections d'Ewan
+
+_(à compléter)_
+
+---

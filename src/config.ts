@@ -17,4 +17,7 @@ export const EMAIL = 'pineauewan0@gmail.com'
  * Profil LinkedIn. Laisser vide masque la ligne sur la page « à propos ».
  * À renseigner avant le lancement : c'est là que le post renverra.
  */
-export const LINKEDIN = ''
+// Le type est élargi à `string` volontairement : sans cela TypeScript fige la
+// valeur en type littéral, et le garde `LINKEDIN === ''` de la page « à propos »
+// devient une comparaison impossible — erreur TS2367, build cassé.
+export const LINKEDIN: string = 'https://www.linkedin.com/in/ewan-pineau'
