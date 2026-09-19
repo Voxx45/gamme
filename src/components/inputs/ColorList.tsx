@@ -29,11 +29,13 @@ function LigneCouleur({
   index,
   hex,
   nomSaisi,
+  verrouillee,
   total,
 }: {
   index: number
   hex: string
   nomSaisi: string
+  verrouillee: boolean
   total: number
 }) {
   const { envoyer } = useCharte()
@@ -99,6 +101,33 @@ function LigneCouleur({
           className="surtitre min-w-0 flex-1 rounded-[2px] border border-transparent bg-transparent px-1 py-0.5 text-ink placeholder:text-ink-muted hover:border-rule focus:border-accent focus:text-ink"
         />
         <div className="flex items-center gap-0.5">
+          {/*
+            Le cadenas protège la couleur d'une correction appliquée d'un clic
+            depuis la matrice. Il reste visible quand il est fermé, même sans
+            survol : un garde-fou qu'on ne voit pas ne rassure personne.
+          */}
+          <Bouton
+            variante="discret"
+            taille="petite"
+            className={classes('h-6 w-6 px-0', verrouillee && 'text-accent')}
+            aria-pressed={verrouillee}
+            aria-label={verrouillee ? `Déverrouiller ${nom}` : `Verrouiller ${nom}`}
+            title={verrouillee ? 'Verrouillée : les corrections ne la remplaceront pas' : 'Verrouiller cette couleur'}
+            onClick={() => {
+              envoyer({ type: 'basculerVerrou', index })
+              annoncer(verrouillee ? `${nom} déverrouillée.` : `${nom} verrouillée.`)
+            }}
+          >
+            <svg width="10" height="11" viewBox="0 0 10 11" fill="none" aria-hidden="true">
+              <rect x="1" y="4.6" width="8" height="5.6" rx="1" stroke="currentColor" strokeWidth="1.2" />
+              <path
+                d={verrouillee ? 'M3 4.6V3.2a2 2 0 1 1 4 0v1.4' : 'M3 4.6V3.2a2 2 0 0 1 3.8-.9'}
+                stroke="currentColor"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+              />
+            </svg>
+          </Bouton>
           <Bouton
             variante="discret"
             taille="petite"
@@ -129,7 +158,7 @@ function LigneCouleur({
             variante="discret"
             taille="petite"
             className="h-6 w-6 px-0"
-            disabled={total <= 1}
+            disabled={total <= 1 || verrouillee}
             aria-label={`Supprimer ${nom}`}
             onClick={() => {
               envoyer({ type: 'supprimerCouleur', index })
@@ -181,7 +210,7 @@ function LigneCouleur({
 }
 
 export function ColorList() {
-  const { config, envoyer } = useCharte()
+  const { config, envoyer, verrous } = useCharte()
   const annoncer = useAnnonce()
   const total = config.colors.length
 
@@ -191,7 +220,14 @@ export function ColorList() {
         {config.colors.map((hex, i) => (
           // Clé par position, et non par couleur : sinon chaque frappe valide
           // remonterait la ligne et le champ perdrait le focus.
-          <LigneCouleur key={i} index={i} hex={hex} nomSaisi={config.colorNames[i] ?? ''} total={total} />
+          <LigneCouleur
+            key={i}
+            index={i}
+            hex={hex}
+            nomSaisi={config.colorNames[i] ?? ''}
+            verrouillee={verrous[i] === true}
+            total={total}
+          />
         ))}
       </ul>
 

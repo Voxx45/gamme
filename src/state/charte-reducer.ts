@@ -31,6 +31,17 @@ export type EtatCharte = {
   config: BrandConfig
   passe: BrandConfig[]
   futur: BrandConfig[]
+  /**
+   * Couleurs verrouillées, par position.
+   *
+   * Un verrou empêche une correction proposée d'écraser la couleur : on
+   * explore les suggestions sans risquer celle qu'on tenait à garder.
+   *
+   * Il ne part pas dans l'URL : c'est une précaution de travail, pas une
+   * propriété de la charte. Quelqu'un qui reçoit le lien reçoit des couleurs,
+   * pas les garde-fous que l'on s'était donnés en les choisissant.
+   */
+  verrous: boolean[]
 }
 
 const PROFONDEUR_HISTORIQUE = 20
@@ -52,6 +63,7 @@ export type Action =
   | { type: 'remplacerConfig'; config: BrandConfig }
   | { type: 'annuler' }
   | { type: 'retablir' }
+  | { type: 'basculerVerrou'; index: number }
 
 /** Complète une police du catalogue avec sa catégorie et une graisse servie. */
 export function normaliserPolice(famille: string, graisse: number): FontChoice {
@@ -147,7 +159,7 @@ function identiques(a: BrandConfig, b: BrandConfig): boolean {
   return JSON.stringify(a) === JSON.stringify(b)
 }
 
-export const ETAT_INITIAL: EtatCharte = { config: CONFIG_VIDE, passe: [], futur: [] }
+export const ETAT_INITIAL: EtatCharte = { config: CONFIG_VIDE, passe: [], futur: [], verrous: [] }
 
 /**
  * Le réducteur complet, historique compris.
@@ -157,10 +169,17 @@ export const ETAT_INITIAL: EtatCharte = { config: CONFIG_VIDE, passe: [], futur:
  * nécessaires pour défaire un seul geste.
  */
 export function reducteur(etat: EtatCharte, action: Action): EtatCharte {
+  if (action.type === 'basculerVerrou') {
+    const verrous = [...etat.verrous]
+    verrous[action.index] = !verrous[action.index]
+    return { ...etat, verrous }
+  }
+
   if (action.type === 'annuler') {
     const precedent = etat.passe.at(-1)
     if (!precedent) return etat
     return {
+      ...etat,
       config: precedent,
       passe: etat.passe.slice(0, -1),
       futur: [etat.config, ...etat.futur].slice(0, PROFONDEUR_HISTORIQUE),
@@ -171,6 +190,7 @@ export function reducteur(etat: EtatCharte, action: Action): EtatCharte {
     const suivant = etat.futur[0]
     if (!suivant) return etat
     return {
+      ...etat,
       config: suivant,
       passe: [...etat.passe, etat.config].slice(-PROFONDEUR_HISTORIQUE),
       futur: etat.futur.slice(1),
@@ -180,8 +200,23 @@ export function reducteur(etat: EtatCharte, action: Action): EtatCharte {
   const config = appliquer(etat.config, action)
   if (identiques(config, etat.config)) return etat
 
+  // Le verrou appartient à la couleur : il la suit quand on réordonne, et
+  // disparaît avec elle.
+  let verrous = etat.verrous
+  if (action.type === 'supprimerCouleur') {
+    verrous = etat.verrous.filter((_, i) => i !== action.index)
+  } else if (action.type === 'deplacerCouleur') {
+    const copie = [...etat.verrous]
+    const [deplace] = copie.splice(action.index, 1)
+    copie.splice(action.vers, 0, deplace ?? false)
+    verrous = copie
+  } else if (action.type === 'remplacerConfig') {
+    verrous = []
+  }
+
   return {
     config,
+    verrous,
     passe: [...etat.passe, etat.config].slice(-PROFONDEUR_HISTORIQUE),
     // Toute action neuve coupe la branche de rétablissement : c'est le
     // comportement attendu partout ailleurs, on ne va pas le réinventer.

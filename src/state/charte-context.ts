@@ -16,6 +16,8 @@ export type ValeurCharte = {
   peutRetablir: boolean
   annuler: () => void
   retablir: () => void
+  /** Couleurs verrouillées, par position. */
+  verrous: boolean[]
 }
 
 export const ContexteCharte = createContext<ValeurCharte | null>(null)

@@ -1,7 +1,8 @@
 import { useId, useMemo, useState } from 'react'
 import { useAnnonce, useAnnonceDifferee } from '../../hooks/annonce-context'
-import { evaluatePair, suggestAccessible, type ColorScale, type PairEvaluation } from '../../lib'
+import { evaluatePair, niveauApca, suggestAccessible, type ColorScale, type PairEvaluation } from '../../lib'
 import { useCharte } from '../../state/charte-context'
+import { MatriceNuances } from './MatriceNuances'
 import { Bouton, Pastille, Section } from '../ui/Base'
 import { classes } from '../ui/classes'
 
@@ -29,7 +30,7 @@ type Cellule = {
 }
 
 export function ContrastPanel() {
-  const { charte, envoyer } = useCharte()
+  const { charte, envoyer, verrous } = useCharte()
   const annoncer = useAnnonce()
   const [seulementValides, setSeulementValides] = useState(false)
   const idFiltre = useId()
@@ -76,6 +77,45 @@ export function ContrastPanel() {
           fond: c.fond,
           ratio: c.evaluation.ratio,
           suggestion: suggestAccessible(c.texte.scale, c.texte.scale.anchor, c.fond.hex),
+        })
+      }
+    }
+    return liste
+  }, [cellules])
+
+  /**
+   * Les paires que WCAG 2.1 accepte et qu'APCA juge insuffisantes.
+   *
+   * C'est le seul endroit où afficher APCA apporte quelque chose : donner deux
+   * chiffres pour chaque paire n'aiderait personne, montrer les six cas où ils
+   * ne disent pas la même chose, si.
+   */
+  const desaccords = useMemo(() => {
+    const liste: {
+      cle: string
+      nomTexte: string
+      nomFond: string
+      texte: string
+      fond: string
+      ratio: number
+      lc: number
+      usage: string
+    }[] = []
+    for (const ligne of cellules) {
+      for (const c of ligne) {
+        if (c.texte.hex === c.fond.hex) continue
+        if (!c.evaluation.normal.aa) continue
+        const n = niveauApca(c.texte.hex, c.fond.hex)
+        if (n.texteCourant) continue
+        liste.push({
+          cle: `apca-${c.texte.nom}-${c.fond.nom}`,
+          nomTexte: c.texte.nom,
+          nomFond: c.fond.nom,
+          texte: c.texte.hex,
+          fond: c.fond.hex,
+          ratio: c.evaluation.ratio,
+          lc: n.lc,
+          usage: n.usage,
         })
       }
     }
@@ -254,7 +294,15 @@ export function ContrastPanel() {
                   </span>
                 </span>
 
-                {c.suggestion ? (
+                {c.texte.index !== null && verrous[c.texte.index] ? (
+                  <span className="flex items-center gap-1.5 text-[12px] text-ink-muted">
+                    <svg width="10" height="11" viewBox="0 0 10 11" fill="none" aria-hidden="true">
+                      <rect x="1" y="4.6" width="8" height="5.6" rx="1" stroke="currentColor" strokeWidth="1.2" />
+                      <path d="M3 4.6V3.2a2 2 0 1 1 4 0v1.4" stroke="currentColor" strokeWidth="1.2" />
+                    </svg>
+                    Verrouillée — déverrouillez-la pour appliquer une correction.
+                  </span>
+                ) : c.suggestion ? (
                   <Bouton
                     variante="secondaire"
                     taille="petite"
@@ -292,6 +340,45 @@ export function ContrastPanel() {
           Toutes les paires atteignent AA en texte courant.
         </p>
       )}
+
+      {desaccords.length > 0 ? (
+        <div className="flex flex-col gap-2 border-t border-rule pt-5">
+          <h3 className="text-[14px] font-semibold text-ink">Là où les deux calculs se contredisent</h3>
+          <p className="max-w-prose text-[13px] text-ink-muted">
+            APCA est le calcul du brouillon WCAG 3. Contrairement au ratio de WCAG 2.1, il n’est pas symétrique et
+            corrige les tons sombres, où le ratio est réputé trop indulgent. Ces paires passent AA au sens de WCAG 2.1
+            mais restent sous le seuil APCA du texte courant. Rien ne vous oblige à les corriger — WCAG 2.1 est la norme
+            opposable — mais elles méritent un coup d’œil.
+          </p>
+          <ul className="flex flex-col divide-y divide-rule border-y border-rule">
+            {desaccords.map((d) => (
+              <li key={d.cle} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2">
+                <span className="flex min-w-[180px] flex-1 items-center gap-2 text-[13px] text-ink-soft">
+                  <span
+                    aria-hidden="true"
+                    style={{ backgroundColor: d.fond, color: d.texte }}
+                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-[2px] border border-ink/12 text-[11px] font-semibold"
+                  >
+                    Aa
+                  </span>
+                  <span>
+                    <span className="font-medium text-ink">{d.nomTexte}</span> sur {d.nomFond}
+                  </span>
+                </span>
+                <span className="tabulaire text-[12px] text-ink-muted">
+                  WCAG {d.ratio.toFixed(2)} · AA
+                </span>
+                <span className="tabulaire text-[12px] text-fail">APCA Lc {d.lc}</span>
+                <span className="text-[12px] text-ink-muted">{d.usage}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {charte.colors.length > 0 ? (
+        <MatriceNuances charte={charte} noms={charte.colors.map((c, i) => nomCouleur(charte.config, i, c.slug))} />
+      ) : null}
     </Section>
   )
 }

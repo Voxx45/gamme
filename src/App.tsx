@@ -11,10 +11,11 @@ import { classes } from './components/ui/classes'
 import { useAnnonce } from './hooks/annonce-context'
 import { GRAND_ECRAN, useMediaQuery } from './hooks/useMediaQuery'
 import { FournisseurAnnonces } from './hooks/useAnnonce'
+import { EXEMPLES } from './data/exemples'
 import { GardeFou } from './components/GardeFou'
 import { APropos } from './components/pages/APropos'
 import { ACCROCHE, AUTEUR, DEPOT, NOM_OUTIL, SITE } from './config'
-import { shareUrl } from './lib'
+import { encodeState, shareUrl } from './lib'
 import { Lien } from './routage-lien'
 import { useChemin } from './routage'
 import { FournisseurPreferences } from './state/FournisseurPreferences'
@@ -235,7 +236,7 @@ function EtatVide() {
 
   return (
     <div className="flex flex-1 items-center justify-center px-5 py-16">
-      <div className="max-w-[540px]">
+      <div className="max-w-[640px]">
         <p className="surtitre">Commencer</p>
         <h1 className="mt-3 text-[30px] font-semibold leading-[1.15] tracking-[-0.02em] text-ink">
           Quatre couleurs, deux polices.
@@ -267,7 +268,38 @@ function EtatVide() {
           </Bouton>
         </div>
 
-        <dl className="mt-10 grid grid-cols-1 gap-x-8 gap-y-3 border-t border-rule pt-6 text-[13px] sm:grid-cols-2">
+        <div className="mt-11 border-t border-rule pt-7">
+          <p className="surtitre">Ou partir d’une charte existante</p>
+          {/*
+            Chaque carte est un simple lien vers une URL : la galerie n'a aucun
+            mécanisme propre, elle prouve au passage que tout tient dans
+            l'adresse. Les cinq exemples couvrent des cas différents — une
+            palette qui passe partout, une qui échoue beaucoup, des teintes qui
+            se frôlent — plutôt que cinq variations agréables.
+          */}
+          <ul className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {EXEMPLES.map((ex) => (
+              <li key={ex.config.name}>
+                <a
+                  href={`#${encodeState(ex.config)}`}
+                  className="flex h-full items-start gap-3 rounded-[2px] border border-rule p-3 transition-colors hover:border-rule-strong hover:bg-surface"
+                >
+                  <span aria-hidden="true" className="mt-0.5 flex shrink-0 overflow-hidden rounded-[2px]">
+                    {ex.config.colors.map((c) => (
+                      <span key={c} style={{ backgroundColor: c }} className="h-8 w-3.5" />
+                    ))}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-[14px] font-medium text-ink">{ex.config.name}</span>
+                    <span className="block text-[12.5px] leading-snug text-ink-muted">{ex.propos}</span>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <dl className="mt-9 grid grid-cols-2 gap-x-8 gap-y-3 border-t border-rule pt-6 text-[13px]">
           {[
             ['Sans compte', 'Rien à créer, rien à confirmer.'],
             ['Sans serveur', 'Tout le calcul a lieu dans cet onglet.'],

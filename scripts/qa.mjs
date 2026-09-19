@@ -333,7 +333,9 @@ async function main() {
   verifier(nuancesSolo === 11, 'une seule couleur : 11 nuances calculees', String(nuancesSolo))
   await limites.getByRole('tab', { name: 'Contrastes', exact: true }).click()
   await limites.waitForTimeout(400)
-  const cellulesSolo = await limites.locator('table td').count()
+  // La page porte deux tables : la matrice de base et la grille nuance par
+  // nuance. On ne compte que la premiere.
+  const cellulesSolo = await limites.locator('table').first().locator('td').count()
   verifier(cellulesSolo === 9, 'une seule couleur : matrice 3x3 avec blanc et noir', String(cellulesSolo))
 
   // -- Quatre couleurs presque identiques

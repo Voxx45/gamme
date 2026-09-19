@@ -111,8 +111,20 @@ export function FournisseurCharte({ children }: { children: ReactNode }) {
       peutRetablir: etat.futur.length > 0,
       annuler,
       retablir,
+      verrous: etat.verrous,
     }),
-    [config, charte, vide, chargerExemple, reinitialiser, etat.passe.length, etat.futur.length, annuler, retablir],
+    [
+      config,
+      charte,
+      vide,
+      chargerExemple,
+      reinitialiser,
+      etat.passe.length,
+      etat.futur.length,
+      etat.verrous,
+      annuler,
+      retablir,
+    ],
   )
 
   return <ContexteCharte.Provider value={valeur}>{children}</ContexteCharte.Provider>
