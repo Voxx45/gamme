@@ -22,6 +22,8 @@ rien de ce que vous saisissez ne le quitte.
 | ![Le panneau Palette : quatre échelles de onze nuances, avec la couleur saisie encadrée sur son palier d'ancrage.](docs/palette.png) | **Palette** — onze nuances par couleur, la couleur saisie restituée telle quelle. |
 | ![Le panneau Contrastes : une matrice six par six avec les ratios et les pastilles AA/AAA, suivie de la liste des corrections proposées.](docs/contrastes.png) | **Contrastes** — la matrice complète, puis une correction cliquable par paire en échec. |
 | ![Le panneau Typographie : neuf niveaux, chacun avec sa taille en pixels et en rem, son interlignage conseillé, et un spécimen rendu dans la police choisie.](docs/typographie.png) | **Typographie** — l'échelle rendue dans vos polices, interlignage compris. |
+| ![La grille nuance par nuance : onze paliers contre onze, les cases pleines marquant les paires qui atteignent le seuil.](docs/grille.png) | **Nuance par nuance** — 121 paires, le seuil au choix. |
+| ![L'outil en thème sombre, avec la palette rendue telle que la perçoit une deutéranopie.](docs/sombre-daltonisme.png) | **Thème sombre et simulation** — ici en deutéranopie. |
 
 ---
 
@@ -48,8 +50,19 @@ paragraphe se désagrège en lignes flottantes.
 lien et en 1080 × 1350 pour un post. Exporté en PNG à deux fois la définition,
 polices comprises.
 
+**La grille nuance par nuance.** Les onze paliers d'une échelle contre les onze
+de l'autre, avec le seuil de votre choix. C'est la grille qu'on consulte au
+moment d'intégrer : elle répond à « est-ce que le palier 600 passe sur le
+palier 50 ».
+
+**La simulation du daltonisme.** La palette et le brand board rendus tels que
+les perçoivent une deutéranopie, une protanopie ou une tritanopie. Un vert de
+validation et un rouge d'erreur qui ne se distinguent que par la teinte
+deviennent le même objet : mieux vaut le voir avant de livrer.
+
 **Les exports.** Variables CSS, bloc `@theme` pour Tailwind v4, tokens JSON au
-format W3C Design Tokens. À copier ou à télécharger.
+format W3C Design Tokens. À copier ou à télécharger. Nommez vos couleurs et les
+tokens s'appellent `--color-encre-500` plutôt que `--color-primary-500`.
 
 **Une URL partageable.** Toute la configuration tient dans le fragment de
 l'URL — la partie après le `#`, qui n'est jamais transmise au serveur. Même
@@ -68,8 +81,15 @@ l'hébergeur ne voit pas votre charte.
   qui passe AA qui est employée. Les couleurs exactes restent dans la bande de
   palette, en bas.
 - **L'interface ne vole pas la vedette aux palettes.** Papier, encre, filets
-  d'un cheveu, un seul accent. Toutes ses couleurs de texte passent AAA : un
-  outil qui juge le contraste des autres n'a pas le droit d'échouer au sien.
+  d'un cheveu, un seul accent. Toutes ses couleurs de texte atteignent AAA, dans
+  les deux thèmes : un outil qui juge le contraste des autres n'a pas le droit
+  d'échouer au sien.
+- **Jamais d'`opacity` sur du texte.** Elle réduit le contraste dans les mêmes
+  proportions, sans qu'on le voie venir. Les libellés secondaires sont mélangés
+  vers le fond en s'arrêtant au dernier point qui tient AA.
+- **APCA en second avis, jamais à la place.** Le calcul du brouillon WCAG 3 n'est
+  affiché que là où il contredit WCAG 2.1 — donner deux chiffres pour chaque
+  paire n'aiderait personne.
 
 ## Accessibilité
 
@@ -77,9 +97,9 @@ C'est un outil qui parle d'accessibilité ; il est tenu d'être exemplaire.
 
 | Contrôle | Résultat |
 |---|---|
-| Lighthouse mobile | 98 · 100 · 100 · 100 |
-| axe-core, trois états | 0 violation |
-| Tests unitaires | 151 |
+| Lighthouse mobile | 100 · 100 · 100 · 100 |
+| axe-core, quatre états dont 320 px | 0 violation |
+| Tests unitaires | 183 |
 | Vérifications de bout en bout | 83 |
 
 Navigation clavier complète — combobox ARIA, onglets aux flèches, anneau de
@@ -96,14 +116,18 @@ correspondance exacte sur cinq paires, ratios et verdicts.
 | | |
 |---|---|
 | [Vite](https://vite.dev) | build |
-| [React](https://react.dev) + [TypeScript](https://www.typescriptlang.org) | interface |
+| [Preact](https://preactjs.com) + [TypeScript](https://www.typescriptlang.org) | interface |
 | [Tailwind CSS v4](https://tailwindcss.com) | styles |
-| [culori](https://culorijs.org) | conversions et gamut mapping |
+| [culori](https://culorijs.org) | conversions, gamut mapping, simulation |
 | [html-to-image](https://github.com/bubkoo/html-to-image) | export PNG |
 
-Deux dépendances de production, en tout. Pas de serveur, pas de base de données,
-pas de clé d'API — le catalogue de 171 Google Fonts est embarqué dans le dépôt
-et les familles se chargent à la demande via l'URL `css2`.
+Le code est écrit en React ; `preact/compat` le sert pour un dixième du poids.
+**47 ko gzip au premier chargement**, `html-to-image` n'étant téléchargé qu'au
+premier export.
+
+Pas de serveur, pas de base de données, pas de clé d'API — le catalogue de
+171 Google Fonts est embarqué dans le dépôt et les familles se chargent à la
+demande via l'URL `css2`.
 
 ### Architecture
 

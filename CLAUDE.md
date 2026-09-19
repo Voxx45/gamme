@@ -31,10 +31,13 @@ Il obtient en quelques secondes une charte exploitable, et une URL pour la parta
 - **Polices.** Un catalogue de **171 Google Fonts** est embarqué dans le dépôt
   (`src/data/google-fonts.json`). Chargement à la demande via l'URL `css2` de
   Google Fonts. **Ne jamais utiliser l'API Google Fonts** (elle exige une clé).
-- **Stack.** Vite + React + TypeScript + Tailwind CSS v4. Couleurs : `culori`.
-  Export PNG : `html-to-image`. **Aucune autre dépendance de production sans
-  demander à Ewan.** En développement : `vitest`, `playwright`, `axe-core`,
-  `lighthouse`, tous ajoutés avec son accord.
+- **Stack.** Vite + TypeScript + Tailwind CSS v4. Le code est écrit en React et
+  servi par `preact/compat` : 47 ko gzip au premier chargement au lieu de 107.
+  Couleurs : `culori`, via `src/lib/color/culori.ts` qui n'enregistre que
+  `rgb`, `oklab` et `oklch` — ajouter un espace se fait là, une fois.
+  Export PNG : `html-to-image`, chargé à la demande.
+  **Aucune autre dépendance de production sans demander à Ewan.** En
+  développement : `vitest`, `playwright`, `axe-core`, `lighthouse`.
 - **Accessibilité exemplaire.** C'est un outil qui parle d'accessibilité : il doit
   être irréprochable. Tout au clavier, focus visible, un label par champ, résultats
   annoncés en `aria-live`, `prefers-reduced-motion` respecté.
@@ -131,6 +134,10 @@ pas seulement un écran.
 | `npm run video` | la démo de 30 s en 1080 × 1350 |
 | `npm run demo` | rejoue la charte NØRVA dans le terminal |
 
+Les préférences d'affichage — thème et simulation du daltonisme — vivent dans
+`src/state/preferences.ts` et **ne partent pas dans l'URL** : elles décrivent
+une façon de regarder, pas la charte. Les verrous de couleur non plus.
+
 Les scripts de vérification ont besoin d'un serveur : lancer
 `npm run build && npm run preview` d'abord, puis passer l'URL par la variable
 d'environnement `BASE`.
@@ -149,6 +156,13 @@ d'environnement `BASE`.
   `lib/export/fonts-embed.ts` et passées via l'option `fontEmbedCSS`.
 - Ne **jamais monter deux dispositions** en masquant l'une en CSS : cela duplique
   les `id` et casse les `aria-controls`. Employer `useMediaQuery`.
+- **Ne jamais écrire `verifier(true, …)`** dans les scripts de vérification.
+  Deux assertions de ce genre ont gonflé un compte pendant une étape entière.
+- Le linter prend le `useMode` de culori pour un hook React : il est importé
+  sous le nom `enregistrerMode`.
+- L'**auto-hébergement des polices d'interface a été tenté puis annulé** :
+  mesure à l'appui, les 165 ko se mettaient à concurrencer le paquet JavaScript
+  sur la même connexion et le premier affichage passait de 1,8 s à 2,7 s.
 - `documentElement.scrollWidth` **n'est pas** une mesure fiable du débordement :
   Chrome y compte le contenu des conteneurs à défilement imbriqués, même clipés.
   Mesurer `window.scrollX` après une tentative de défilement.

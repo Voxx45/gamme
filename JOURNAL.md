@@ -566,3 +566,97 @@ en 200 avec le bon type de contenu.
 _(à compléter)_
 
 ---
+
+## Étape 7 — Le plan d'amélioration, exécuté
+
+**Date :** 19 septembre 2026
+**Temps passé :** ~3 h 30
+
+Analyse du projet fini, puis exécution des trois vagues du plan.
+
+### Ce que l'analyse a trouvé
+
+D'abord un mensonge, et c'est le plus important : **deux des quarante-deux
+vérifications de `npm run qa` étaient écrites `verifier(true, …)`**. Elles ne
+pouvaient pas échouer. L'une affichait même « 0 nuances » parce que son
+sélecteur cherchait des boutons de palette depuis l'onglet Contrastes. Le compte
+honnête était quarante, pas quarante-deux.
+
+Ensuite : la dérive de chroma devenue flagrante, le panneau Typographie qui
+cassait sa mise en page, l'absence de mode sombre, et surtout **la matrice qui
+ne comparait que quatre couleurs de base** alors que l'outil calculait
+quarante-quatre nuances sans jamais les confronter entre elles.
+
+### Vague 1 — l'intégrité et le visible
+
+Les deux assertions réécrites en vraies. Le chroma plafonné à 1,6 fois celui de
+la couleur saisie : l'encre `#1b2a41` passait par un bleuet `#5e88c7` au palier
+500, elle donne maintenant un acier sourd `#6b88b5`, et le neutre cesse de virer
+au khaki. Le panneau Typographie réparé — métadonnées en grille, rem à trois
+décimales, spécimen sur deux lignes au lieu d'une troncature en plein mot, ce
+qui rend enfin **visible** l'interlignage que le panneau conseille. Intégration
+continue, garde-fou d'erreur, `<noscript>`, captures dans le README.
+
+### Vague 2 — ce qui change la nature de l'outil
+
+**La simulation du daltonisme**, avec les filtres déjà présents dans `culori` :
+aucune dépendance ajoutée. Elle s'applique à la palette et à l'aperçu du brand
+board, jamais à l'export ni aux calculs — simuler en amont fausserait les
+verdicts. **Le mode sombre**, dont les deux jeux de couleurs sont vérifiés au
+même barème. **L'annulation** sur vingt pas, `Ctrl+Z` compris. **Le nommage des
+couleurs**, qui fait sortir `--color-encre-500` au lieu de
+`--color-primary-500`.
+
+### Vague 3 — combler le trou fonctionnel
+
+La **grille nuance par nuance** : onze paliers contre onze, seuil au choix,
+cent vingt et une cases. Sur NØRVA, trente et une paires passent — et les deux
+zones utilisables sautent aux yeux. Une **galerie de cinq chartes** dans l'état
+vide, chacune n'étant qu'un lien vers une URL. Un **verrou par couleur**.
+**APCA**, exposé uniquement là où il contredit WCAG 2.1.
+
+Et le remplacement de React par **Preact** : `preact/compat` sert le même code,
+pour **47 ko gzip au lieu de 107**. Gardé parce que les quatre-vingt-trois
+vérifications passent et qu'aucune erreur de console n'apparaît sur un parcours
+qui touche au `forwardRef` du brand board, à `useSyncExternalStore`, au garde-fou
+de classe et à l'export PNG.
+
+### Quatre défauts trouvés en mesurant, dont deux que je venais de créer
+
+1. **`ink-muted` était à 5,12 et `pass` à 6,03** en thème clair. Le README
+   affirmait « toutes ses couleurs de texte passent AAA » : c'était faux.
+   Valeurs revues à 7,07 et 7,08, ce qui rend les libellés de 11 px plus
+   lisibles au passage.
+2. **Mes boutons de thème faisaient 23,6 px de large**, sous le minimum de 24 px
+   du critère 2.5.8. Un conteneur souple les comprimait.
+3. **Les cases en échec de ma nouvelle grille portaient une `opacity`** qui
+   faisait tomber leur texte à 2,51:1 — exactement la faute que j'avais
+   diagnostiquée et corrigée en vague 1, refaite deux heures plus tard.
+4. **Le champ hexadécimal avait perdu son étiquette** en gagnant un voisin : le
+   nom de la couleur, devenu modifiable, ne pouvait plus servir de `label`.
+
+### Une recommandation fausse, annulée
+
+J'avais recommandé d'auto-héberger les polices de l'interface pour supprimer
+450 ms de blocage. Fait, mesuré : le premier affichage est passé de **1,8 s à
+2,7 s**. Les 165 ko de fichiers s'étaient mis à concurrencer le paquet
+JavaScript sur la même connexion, alors que servis depuis un autre domaine ils
+empruntent une connexion distincte et se chargent en parallèle. Annulé.
+
+C'est la seule conclusion honnête quand la mesure contredit l'hypothèse — et
+c'est la raison d'avoir une mesure.
+
+### Résultat
+
+| | Avant | Après |
+|---|---|---|
+| Lighthouse, état vide | 98 · 100 · 100 · 100 | **100 · 100 · 100 · 100** |
+| Premier chargement | 107 ko gzip | **47 ko gzip** |
+| Tests unitaires | 151 | **183** |
+| Vérifications réelles | 40 sur 42 annoncées | **83** |
+
+### Corrections d'Ewan
+
+_(à compléter)_
+
+---
